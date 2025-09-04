@@ -21,15 +21,16 @@ export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
 
   const handleWhatsAppClick = () => {
     // Analytics event (if GA4 is configured)
-    if (typeof window !== 'undefined' && (window as Window & { gtag?: (...args: unknown[]) => void }).gtag) {
-      (window as Window & { gtag: (...args: unknown[]) => void }).gtag('event', 'whatsapp_click', {
+    if (typeof window !== 'undefined') {
+      const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+      w.gtag?.('event', 'whatsapp_click', {
         custom_map: {
           product_id: product.id,
           product_name: product.name,
           sku: product.sku || product.id,
           price: product.price,
           category: product.categories.length > 0 ? product.categories[0].name : 'Unknown',
-          page_url: window.location.href,
+          page_url: typeof window !== 'undefined' ? window.location.href : '',
         },
       });
     }
