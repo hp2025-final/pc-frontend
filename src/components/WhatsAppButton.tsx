@@ -21,8 +21,8 @@ export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
 
   const handleWhatsAppClick = () => {
     // Analytics event (if GA4 is configured)
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'whatsapp_click', {
+    if (typeof window !== 'undefined' && (window as Window & { gtag?: Function }).gtag) {
+      (window as Window & { gtag: Function }).gtag('event', 'whatsapp_click', {
         custom_map: {
           product_id: product.id,
           product_name: product.name,
@@ -86,7 +86,7 @@ export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
             <div>
               <p className="font-medium">WhatsApp opened!</p>
               <p className="text-sm text-green-200">
-                If WhatsApp didn't open, use the "Copy Message" button.
+                If WhatsApp didn&apos;t open, use the &quot;Copy Message&quot; button.
               </p>
             </div>
           </div>

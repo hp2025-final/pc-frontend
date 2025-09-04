@@ -170,7 +170,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
               No products found
             </h2>
             <p className="text-gray-600 mb-6">
-              This category doesn't have any products yet.
+              This category doesn&apos;t have any products yet.
             </p>
             <Link
               href="/"

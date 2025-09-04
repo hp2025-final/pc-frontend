@@ -59,7 +59,7 @@ export default async function HomePage() {
                 >
                   {category.image && (
                     <div className="relative w-16 h-16 mx-auto mb-4">
-                      <Image
+          <Image
                         src={category.image.src}
                         alt={category.image.alt || category.name}
                         fill
@@ -109,7 +109,7 @@ export default async function HomePage() {
                   {/* Product Image */}
                   <div className="relative aspect-square">
                     {product.images.length > 0 ? (
-                      <Image
+          <Image
                         src={product.images[0].src}
                         alt={product.images[0].alt || product.name}
                         fill

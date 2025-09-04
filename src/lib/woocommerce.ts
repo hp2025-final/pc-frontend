@@ -78,7 +78,7 @@ class WooCommerceClient {
     }
   }
 
-  private async request<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
+  private async request<T>(endpoint: string, params: Record<string, string | number | boolean> = {}): Promise<T> {
     const url = new URL(`/wp-json/wc/v3/${endpoint}`, this.baseUrl);
     
     // Add auth params
@@ -117,7 +117,7 @@ class WooCommerceClient {
    * Get products with search/filter params
    */
   async getProducts(params: WooSearchParams = {}): Promise<WooProduct[]> {
-    const queryParams: Record<string, any> = {
+    const queryParams: Record<string, string | number> = {
       status: 'publish',
       per_page: params.per_page || 20,
       page: params.page || 1,
@@ -158,7 +158,7 @@ class WooCommerceClient {
   async getProductById(id: number): Promise<WooProduct | null> {
     try {
       return await this.request<WooProduct>(`products/${id}`);
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -167,7 +167,7 @@ class WooCommerceClient {
    * Get all product categories
    */
   async getCategories(params: { parent?: number; per_page?: number } = {}): Promise<WooCategory[]> {
-    const queryParams: Record<string, any> = {
+    const queryParams: Record<string, string | number> = {
       per_page: params.per_page || 100,
       orderby: 'name',
       order: 'asc',
