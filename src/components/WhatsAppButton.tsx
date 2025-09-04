@@ -21,8 +21,8 @@ export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
 
   const handleWhatsAppClick = () => {
     // Analytics event (if GA4 is configured)
-    if (typeof window !== 'undefined' && (window as Window & { gtag?: Function }).gtag) {
-      (window as Window & { gtag: Function }).gtag('event', 'whatsapp_click', {
+    if (typeof window !== 'undefined' && (window as Window & { gtag?: (...args: unknown[]) => void }).gtag) {
+      (window as Window & { gtag: (...args: unknown[]) => void }).gtag('event', 'whatsapp_click', {
         custom_map: {
           product_id: product.id,
           product_name: product.name,
