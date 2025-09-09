@@ -7,22 +7,22 @@ import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Tech Store - Premium Computers & Components",
+  title: "PC Wala Online - Premium Computers & Components",
   description: "Professional tech store offering premium computers, components, and accessories with WhatsApp ordering.",
   keywords: "computers, PC, laptops, components, graphics cards, CPUs, RAM, tech store",
-  authors: [{ name: "Tech Store" }],
-  creator: "Tech Store",
+  authors: [{ name: "PC Wala Online" }],
+  creator: "PC Wala Online",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_SITE_URL,
-    siteName: "Tech Store",
-    title: "Tech Store - Premium Computers & Components",
+    siteName: "PC Wala Online",
+    title: "PC Wala Online - Premium Computers & Components",
     description: "Professional tech store offering premium computers, components, and accessories with WhatsApp ordering.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tech Store - Premium Computers & Components",
+    title: "PC Wala Online - Premium Computers & Components",
     description: "Professional tech store offering premium computers, components, and accessories with WhatsApp ordering.",
   },
   robots: {

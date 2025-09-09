@@ -11,8 +11,8 @@ export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
   const [showToast, setShowToast] = useState(false);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
 
-  const waNumber = process.env.NEXT_PUBLIC_WA_NUMBER || '+923162694747';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yourstore.com';
+  const waNumber = process.env.NEXT_PUBLIC_WA_NUMBER || '+923423355119';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.pcwalaonline.com';
   
   // Create WhatsApp message
   const message = `${product.name} (SKU:${product.sku || product.id}) — ${siteUrl}/product/${product.slug} — Price:$${product.price}. I'm interested.`;

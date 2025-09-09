@@ -21,7 +21,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-2xl font-bold text-gray-900">Tech Store</span>
+            <span className="text-2xl font-bold text-gray-900">PC Wala Online</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -151,4 +151,5 @@ export default function Navigation() {
     </nav>
   );
 }
+
 

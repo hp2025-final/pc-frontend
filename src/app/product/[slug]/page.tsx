@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   return {
-    title: `${product.name} - Tech Store`,
+    title: `${product.name} - PC Wala Online`,
     description: product.short_description || product.description,
     openGraph: {
       title: product.name,
@@ -174,4 +174,5 @@ export default async function ProductPage({ params }: ProductPageProps) {
     </div>
   );
 }
+
 

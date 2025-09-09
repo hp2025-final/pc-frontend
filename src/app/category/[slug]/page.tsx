@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   }
 
   return {
-    title: `${category.name} - Tech Store`,
+    title: `${category.name} - PC Wala Online`,
     description: category.description || `Browse our ${category.name} collection`,
   };
 }
