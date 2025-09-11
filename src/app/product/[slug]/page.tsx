@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { woo } from '@/lib/woocommerce';
 import WhatsAppButton from '@/components/WhatsAppButton';
+import { formatPrice, getBrandName, getProductCondition, getWarrantyPeriod, getWarrantyType } from '@/lib/utils';
 
 interface ProductPageProps {
   params: { slug: string };
@@ -100,16 +101,42 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 {product.sale_price && product.sale_price !== product.regular_price ? (
                   <div className="flex items-center space-x-2">
                     <span className="text-3xl font-bold text-red-600">
-                      Rs. {product.sale_price}
+                      {formatPrice(product.sale_price)}
                     </span>
                     <span className="text-xl text-gray-500 line-through">
-                      Rs. {product.regular_price}
+                      {formatPrice(product.regular_price)}
                     </span>
                   </div>
                 ) : (
                   <span className="text-3xl font-bold text-gray-900">
-                    Rs. {product.price}
+                    {formatPrice(product.price)}
                   </span>
+                )}
+              </div>
+
+              {/* Product Info Grid */}
+              <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+                {getBrandName(product) && (
+                  <div>
+                    <span className="font-medium text-gray-900">Brand:</span>
+                    <p className="text-gray-700">{getBrandName(product)}</p>
+                  </div>
+                )}
+                <div>
+                  <span className="font-medium text-gray-900">Condition:</span>
+                  <p className="text-gray-700">{getProductCondition(product)}</p>
+                </div>
+                {getWarrantyPeriod(product) && (
+                  <div>
+                    <span className="font-medium text-gray-900">Warranty Period:</span>
+                    <p className="text-gray-700">{getWarrantyPeriod(product)}</p>
+                  </div>
+                )}
+                {getWarrantyType(product) && (
+                  <div>
+                    <span className="font-medium text-gray-900">Warranty Type:</span>
+                    <p className="text-gray-700">{getWarrantyType(product)}</p>
+                  </div>
                 )}
               </div>
 
@@ -139,6 +166,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 />
               )}
 
+              {/* Specifications (moved below short description) */}
+              {product.attributes.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">Specifications</h2>
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                    {product.attributes.map((attr) => (
+                      <div key={attr.id} className="flex flex-col">
+                        <dt className="text-sm text-gray-600">{attr.name}</dt>
+                        <dd className="text-sm text-gray-900">{attr.options.join(', ')}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
+
               {/* WhatsApp Order Button */}
               <WhatsAppButton product={product} />
             </div>
@@ -155,20 +197,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
           )}
 
-          {/* Specifications */}
-          {product.attributes.length > 0 && (
-            <div className="p-8 border-t border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Specifications</h2>
-              <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {product.attributes.map((attr) => (
-                  <div key={attr.id} className="border-b border-gray-200 pb-2">
-                    <dt className="font-medium text-gray-900">{attr.name}</dt>
-                    <dd className="text-gray-700">{attr.options.join(', ')}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
+          
         </div>
       </div>
     </div>

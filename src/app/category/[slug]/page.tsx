@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { woo } from '@/lib/woocommerce';
+import { formatPrice, getBrandName, getProductCondition, getWarrantyPeriod } from '@/lib/utils';
 
 interface CategoryPageProps {
   params: { slug: string };
@@ -122,20 +123,40 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                     </h3>
                     
                     {/* Price */}
-                    <div className="mb-2">
+                    <div className="mb-3">
                       {product.sale_price && product.sale_price !== product.regular_price ? (
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-bold text-red-600">
-                            Rs. {product.sale_price}
+                            {formatPrice(product.sale_price)}
                           </span>
                           <span className="text-sm text-gray-500 line-through">
-                            Rs. {product.regular_price}
+                            {formatPrice(product.regular_price)}
                           </span>
                         </div>
                       ) : (
                         <span className="text-lg font-bold text-gray-900">
-                          Rs. {product.price}
+                          {formatPrice(product.price)}
                         </span>
+                      )}
+                    </div>
+
+                    {/* Brand, Condition, Warranty */}
+                    <div className="space-y-1 mb-3 text-sm">
+                      {getBrandName(product) && (
+                        <div className="flex items-center text-gray-600">
+                          <span className="font-medium">Brand:</span>
+                          <span className="ml-1">{getBrandName(product)}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center text-gray-600">
+                        <span className="font-medium">Condition:</span>
+                        <span className="ml-1">{getProductCondition(product)}</span>
+                      </div>
+                      {getWarrantyPeriod(product) && (
+                        <div className="flex items-center text-gray-600">
+                          <span className="font-medium">Warranty:</span>
+                          <span className="ml-1">{getWarrantyPeriod(product)}</span>
+                        </div>
                       )}
                     </div>
 
