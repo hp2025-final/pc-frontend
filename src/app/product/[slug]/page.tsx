@@ -100,15 +100,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 {product.sale_price && product.sale_price !== product.regular_price ? (
                   <div className="flex items-center space-x-2">
                     <span className="text-3xl font-bold text-red-600">
-                      ${product.sale_price}
+                      Rs. {product.sale_price}
                     </span>
                     <span className="text-xl text-gray-500 line-through">
-                      ${product.regular_price}
+                      Rs. {product.regular_price}
                     </span>
                   </div>
                 ) : (
                   <span className="text-3xl font-bold text-gray-900">
-                    ${product.price}
+                    Rs. {product.price}
                   </span>
                 )}
               </div>

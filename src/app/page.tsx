@@ -134,15 +134,15 @@ export default async function HomePage() {
                       {product.sale_price && product.sale_price !== product.regular_price ? (
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-bold text-red-600">
-                            ${product.sale_price}
+                            Rs. {product.sale_price}
                           </span>
                           <span className="text-sm text-gray-500 line-through">
-                            ${product.regular_price}
+                            Rs. {product.regular_price}
                           </span>
                         </div>
                       ) : (
                         <span className="text-lg font-bold text-gray-900">
-                          ${product.price}
+                          Rs. {product.price}
                         </span>
                       )}
                     </div>

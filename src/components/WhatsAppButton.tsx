@@ -15,7 +15,7 @@ export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.pcwalaonline.com';
   
   // Create WhatsApp message
-  const message = `${product.name} (SKU:${product.sku || product.id}) — ${siteUrl}/product/${product.slug} — Price:$${product.price}. I'm interested.`;
+  const message = `${product.name} (SKU:${product.sku || product.id}) — ${siteUrl}/product/${product.slug} — Price: Rs. ${product.price}. I'm interested.`;
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${waNumber.replace(/[^0-9]/g, '')}?text=${encodedMessage}`;
 
