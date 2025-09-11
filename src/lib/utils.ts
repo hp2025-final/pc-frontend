@@ -27,9 +27,17 @@ export function getAttributeValue(attributes: Array<{ name: string; options: str
 }
 
 /**
+ * Product interface for utility functions
+ */
+interface ProductForUtils {
+  attributes?: Array<{ name: string; options: string[] }>;
+  brands?: Array<{ name: string }>;
+}
+
+/**
  * Get brand name from product attributes or categories
  */
-export function getBrandName(product: any): string {
+export function getBrandName(product: ProductForUtils): string {
   // Try to get from attributes first
   const brandFromAttr = getAttributeValue(product.attributes || [], 'brand');
   if (brandFromAttr) return brandFromAttr;
@@ -45,7 +53,7 @@ export function getBrandName(product: any): string {
 /**
  * Get product condition (New/Used/Refurbished)
  */
-export function getProductCondition(product: any): string {
+export function getProductCondition(product: ProductForUtils): string {
   return getAttributeValue(product.attributes || [], 'condition') || 
          getAttributeValue(product.attributes || [], 'product condition') || 
          'New';
@@ -54,7 +62,7 @@ export function getProductCondition(product: any): string {
 /**
  * Get warranty period
  */
-export function getWarrantyPeriod(product: any): string {
+export function getWarrantyPeriod(product: ProductForUtils): string {
   return getAttributeValue(product.attributes || [], 'warranty period') || 
          getAttributeValue(product.attributes || [], 'warranty') || 
          '';
@@ -63,7 +71,7 @@ export function getWarrantyPeriod(product: any): string {
 /**
  * Get warranty type (International/Local)
  */
-export function getWarrantyType(product: any): string {
+export function getWarrantyType(product: ProductForUtils): string {
   return getAttributeValue(product.attributes || [], 'warranty type') || '';
 }
 
