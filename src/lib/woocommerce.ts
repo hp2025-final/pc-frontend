@@ -80,11 +80,11 @@ class WooCommerceClient {
 
   private async request<T>(endpoint: string, params: Record<string, string | number | boolean> = {}): Promise<T> {
     const url = new URL(`/wp-json/wc/v3/${endpoint}`, this.baseUrl);
-    
+
     // Add auth params
     url.searchParams.set('consumer_key', this.consumerKey);
     url.searchParams.set('consumer_secret', this.consumerSecret);
-    
+
     // Add query params
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -93,6 +93,7 @@ class WooCommerceClient {
     });
 
     try {
+      console.log('Fetching WooCommerce API:', url.toString());
       const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
@@ -103,12 +104,15 @@ class WooCommerceClient {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('WooCommerce API error response:', errorText);
         throw new Error(`WooCommerce API error: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     } catch (error) {
-      console.error('WooCommerce API request failed:', error);
+      console.error('WooCommerce API request failed for URL:', url.toString());
+      console.error('Error details:', error);
       throw error;
     }
   }

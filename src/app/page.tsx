@@ -1,244 +1,324 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { woo } from '@/lib/woocommerce';
-import { formatPrice, getBrandName, getProductCondition, getWarrantyPeriod } from '@/lib/utils';
+import { formatPriceRange, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
+import CategoryIcon from '@/components/CategoryIcon';
+import AnimatedText from '@/components/AnimatedText';
 
 // ISR: revalidate every 2 hours
 export const revalidate = 7200;
 
+// Full master category list — shows all with Coming Soon if empty
+const ALL_CATEGORIES = [
+  { slug: 'pc-cases', name: 'PC Cases' },
+  { slug: 'motherboards', name: 'Motherboards' },
+  { slug: 'gpus', name: 'Graphics Cards' },
+  { slug: 'cpus', name: 'Processors' },
+  { slug: 'ram', name: 'RAM' },
+  { slug: 'storage', name: 'Storage' },
+  { slug: 'power-supplies', name: 'PSU' },
+  { slug: 'cpu-coolers', name: 'CPU Coolers' },
+  { slug: 'case-fans', name: 'Case Fans' },
+  { slug: 'laptops', name: 'Laptops' },
+  { slug: 'monitors', name: 'Monitors' },
+  { slug: 'prebuilt-pcs', name: 'Prebuilt PCs' },
+  { slug: 'printers', name: 'Printers' },
+  { slug: 'peripherals', name: 'Peripherals' },
+  { slug: 'networking', name: 'Networking' },
+  { slug: 'accessories', name: 'Accessories' },
+];
+
 export default async function HomePage() {
-  // Fetch featured categories and latest products
-  const [categories, latestProducts] = await Promise.all([
-    woo.getCategories({ parent: 0, per_page: 8 }), // Top-level categories only
-    woo.getProducts({ per_page: 8, orderby: 'date', order: 'desc' }),
+  const [wooCategories, latestProducts] = await Promise.all([
+    woo.getCategories({ per_page: 100 }),
+    woo.getProducts({ per_page: 12, orderby: 'date', order: 'desc' }),
   ]);
 
+  // Map WooCommerce category counts by slug
+  const catCountMap: Record<string, number> = {};
+  for (const c of wooCategories) {
+    catCountMap[c.slug] = c.count;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              PC Wala Online
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100">
-              Premium computers, components, and accessories
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/category/prebuilt-pcs"
-                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-              >
-                Shop Prebuilt PCs
-              </Link>
-              <Link
-                href="/category/components"
-                className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
-              >
-                Browse Components
-              </Link>
-            </div>
+    <div style={{ minHeight: '100vh', background: '#fff' }}>
+
+      {/* ──────────── HERO ──────────── */}
+      <section className="scanline-bg" style={{
+        background: '#fff',
+        borderBottom: '3px solid #000',
+        padding: '64px 16px 56px',
+        textAlign: 'center',
+      }}>
+        <div className="container-retro">
+          <div style={{
+            display: 'inline-block',
+            border: '3px solid #000',
+            padding: '6px 16px',
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: '10px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+            marginBottom: '24px',
+            background: '#000',
+            color: '#fff',
+          }}>
+            {'// LEVEL UP YOUR BUILD'}
+          </div>
+
+          <h1 style={{
+            fontFamily: 'var(--font-pixel), monospace',
+            fontSize: 'clamp(18px, 5vw, 36px)',
+            lineHeight: 1.3,
+            letterSpacing: '-0.02em',
+            marginBottom: '16px',
+            color: '#000',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <span>PC WALA</span>
+            <AnimatedText words={['ONLINE', 'GAMING', 'PROFESSIONALS']} />
+          </h1>
+
+          <p className="cursor-blink" style={{
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: 'clamp(12px, 2.5vw, 16px)',
+            color: '#555',
+            marginBottom: '36px',
+            letterSpacing: '0.02em',
+          }}>
+            GEAR UP. PLAY ON
+          </p>
+
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href="#latest-arrivals" className="pixel-btn">
+              ▶ // Latest Arrivals
+            </Link>
+            <Link href="#shop-by-category" className="pixel-btn pixel-btn-outline">
+              ▦ // Shop by Category
+            </Link>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Categories Section */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            Shop by Category
-          </h2>
-          
-          {categories.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {categories.map((category) => (
+      <div className="container-retro" style={{ paddingTop: '48px', paddingBottom: '64px' }}>
+
+        {/* ──────────── CATEGORIES ──────────── */}
+        <section id="shop-by-category" style={{ marginBottom: '64px', scrollMarginTop: '80px' }}>
+          <h2 className="section-title">{"// Shop by Category"}</h2>
+
+          <div style={{
+            display: 'grid',
+            gap: '12px',
+          }}
+            className="cat-grid"
+          >
+            {ALL_CATEGORIES.map((cat) => {
+              const count = catCountMap[cat.slug] ?? 0;
+              const isLive = count > 0;
+
+              if (!isLive) {
+                return (
+                  <div
+                    key={cat.slug}
+                    className="category-tile category-tile-coming"
+                    aria-label={`${cat.name} — coming soon`}
+                  >
+                    <CategoryIcon slug={cat.slug} size={28} color="#aaa" />
+                    <span className="category-tile-name" style={{ color: '#aaa' }}>{cat.name}</span>
+                    <span className="pixel-tag pixel-tag-gray" style={{ fontSize: '8px', padding: '2px 6px' }}>SOON</span>
+                  </div>
+                );
+              }
+
+              return (
                 <Link
-                  key={category.id}
-                  href={`/category/${category.slug}`}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-6 text-center"
+                  key={cat.slug}
+                  href={`/category/${cat.slug}`}
+                  className="category-tile"
+                  aria-label={`Shop ${cat.name} — ${count} products`}
                 >
-                  {category.image && (
-                    <div className="relative w-16 h-16 mx-auto mb-4">
-          <Image
-                        src={category.image.src}
-                        alt={category.image.alt || category.name}
-                        fill
-                        className="object-cover rounded-lg"
-                        sizes="64px"
-                      />
-                    </div>
-                  )}
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    {category.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {category.count} products
-                  </p>
+                  <CategoryIcon slug={cat.slug} size={28} color="#000" />
+                  <span className="category-tile-name">{cat.name}</span>
+                  <span className="category-tile-count">{count} items</span>
                 </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No categories available yet.</p>
-            </div>
-          )}
+              );
+            })}
+          </div>
+
+          <style>{`
+            .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            @media (min-width: 480px) { .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+            @media (min-width: 768px) { .cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+            @media (min-width: 1024px) { .cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+          `}</style>
         </section>
 
-        {/* Latest Products Section */}
-        <section>
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">
-              Latest Products
-            </h2>
+        {/* ──────────── LATEST PRODUCTS ──────────── */}
+        <section id="latest-arrivals" style={{ marginBottom: '64px', scrollMarginTop: '80px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+            <h2 className="section-title" style={{ marginBottom: 0, borderBottom: 'none' }}>{"// Latest Arrivals"}</h2>
             <Link
               href="/search"
-              className="text-blue-600 hover:text-blue-700 font-semibold"
+              style={{
+                fontFamily: 'var(--font-pixel), monospace',
+                fontSize: '9px',
+                color: '#000',
+                textDecoration: 'underline',
+                textUnderlineOffset: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
             >
-              View All →
+              VIEW ALL →
             </Link>
           </div>
 
           {latestProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {latestProducts.map((product) => (
-                <Link
-                  key={product.id}
-                  href={`/product/${product.slug}`}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
-                >
-                  {/* Product Image */}
-                  <div className="relative aspect-square">
-                    {product.images.length > 0 ? (
-          <Image
-                        src={product.images[0].src}
-                        alt={product.images[0].alt || product.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-400">No image</span>
-                      </div>
-                    )}
-                  </div>
+            <div style={{
+              display: 'grid',
+              gap: '8px',
+            }} className="products-grid">
+              {latestProducts.map((product) => {
+                const effectivePrice = getEffectivePrice(product);
+                const priceRange = formatPriceRange(effectivePrice);
+                const inStock = product.stock_status === 'instock';
+                const brand = getBrandName(product);
+                const warranty = getWarrantyPeriod(product);
 
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                      {product.name}
-                    </h3>
-                    
-                    {/* Price */}
-                    <div className="mb-3">
-                      {product.sale_price && product.sale_price !== product.regular_price ? (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg font-bold text-red-600">
-                            {formatPrice(product.sale_price)}
-                          </span>
-                          <span className="text-sm text-gray-500 line-through">
-                            {formatPrice(product.regular_price)}
-                          </span>
-                        </div>
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/product/${product.slug}`}
+                    className="product-card"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    {/* Image */}
+                    <div className="product-card-image">
+                      <span className={`pixel-tag ${inStock ? '' : 'pixel-tag-gray'}`} style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        zIndex: 10,
+                        fontSize: '9px',
+                        padding: '4px 6px',
+                        boxShadow: 'none'
+                      }}>
+                        {inStock ? 'IN STOCK' : 'OUT OF STOCK'}
+                      </span>
+                      {product.images.length > 0 ? (
+                        <Image
+                          src={product.images[0].src}
+                          alt={product.images[0].alt || product.name}
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          style={{ padding: '16px' }}
+                        />
                       ) : (
-                        <span className="text-lg font-bold text-gray-900">
-                          {formatPrice(product.price)}
+                        <div style={{
+                          width: '100%', height: '100%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: '#f0f0f0',
+                        }}>
+                          <CategoryIcon slug={product.categories[0]?.slug || ''} size={40} color="#ccc" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="product-card-body">
+                      <h3 className="product-card-title">{product.name}</h3>
+
+                      {(brand || warranty) && (
+                        <span style={{
+                          fontFamily: 'var(--font-mono), monospace',
+                          fontSize: '10px',
+                          color: '#888',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                        }}>
+                          {[brand, warranty].filter(Boolean).join(' | ')}
                         </span>
                       )}
-                    </div>
 
-                    {/* Brand, Condition, Warranty */}
-                    <div className="space-y-1 mb-3 text-sm">
-                      {getBrandName(product) && (
-                        <div className="flex items-center text-gray-600">
-                          <span className="font-medium">Brand:</span>
-                          <span className="ml-1">{getBrandName(product)}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center text-gray-600">
-                        <span className="font-medium">Condition:</span>
-                        <span className="ml-1">{getProductCondition(product)}</span>
-                      </div>
-                      {getWarrantyPeriod(product) && (
-                        <div className="flex items-center text-gray-600">
-                          <span className="font-medium">Warranty:</span>
-                          <span className="ml-1">{getWarrantyPeriod(product)}</span>
-                        </div>
-                      )}
+                      <div className="price-range price-range-sm">{priceRange}</div>
                     </div>
-
-                    {/* Stock Status */}
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      product.stock_status === 'instock' 
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {product.stock_status === 'instock' ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No products available yet.</p>
+            <div style={{
+              border: '2px solid #000',
+              padding: '48px 24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ fontFamily: 'var(--font-pixel), monospace', fontSize: '11px', color: '#888' }}>
+                No products yet. Check back soon.
+              </p>
             </div>
           )}
+
+          <style>{`
+            .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            @media (min-width: 600px)  { .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+            @media (min-width: 768px)  { .products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+            @media (min-width: 1024px) { .products-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+          `}</style>
         </section>
 
-        {/* Features Section */}
-        <section className="mt-20 py-16 bg-white rounded-lg shadow-sm">
-          <div className="max-w-4xl mx-auto px-8 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-12">
-              Why Choose Us?
-            </h2>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <div>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+        {/* ──────────── WHY US ──────────── */}
+        <section>
+          <h2 className="section-title">{"// Why Choose Us"}</h2>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(1, 1fr)',
+            gap: '12px',
+          }} className="why-grid">
+            {[
+              { icon: '✓', title: 'Genuine Parts', desc: 'Only authentic, verified components. No counterfeits.' },
+              { icon: '▶', title: 'WhatsApp Order', desc: 'Fast ordering via WhatsApp. Real humans reply fast.' },
+              { icon: '⚡', title: 'Competitive Price', desc: 'Best market rates. Price range shown upfront.' },
+            ].map((item) => (
+              <div key={item.title} className="pixel-box" style={{ padding: '24px' }}>
+                <div style={{
+                  fontFamily: 'var(--font-pixel), monospace',
+                  fontSize: '20px',
+                  marginBottom: '12px',
+                  color: '#000',
+                }}>
+                  {item.icon}
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Quality Products
+                <h3 style={{
+                  fontFamily: 'var(--font-pixel), monospace',
+                  fontSize: '10px',
+                  marginBottom: '8px',
+                  letterSpacing: '0.03em',
+                  textTransform: 'uppercase',
+                  color: '#000',
+                }}>
+                  {item.title}
                 </h3>
-                <p className="text-gray-600">
-                  Only the best brands and latest technology for your needs.
+                <p style={{
+                  fontFamily: 'var(--font-mono), monospace',
+                  fontSize: '12px',
+                  color: '#555',
+                  lineHeight: 1.6,
+                }}>
+                  {item.desc}
                 </p>
               </div>
-
-              <div>
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  WhatsApp Support
-                </h3>
-                <p className="text-gray-600">
-                  Get instant support and place orders directly through WhatsApp.
-                </p>
-              </div>
-
-              <div>
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Fast Service
-                </h3>
-                <p className="text-gray-600">
-                  Quick responses and efficient order processing for your convenience.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
+          <style>{`
+            @media (min-width: 600px) { .why-grid { grid-template-columns: repeat(3, 1fr); } }
+          `}</style>
         </section>
+
       </div>
     </div>
   );

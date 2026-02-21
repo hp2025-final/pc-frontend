@@ -1,26 +1,485 @@
 @import "tailwindcss";
 
+/* ============================================
+   PC WALA ONLINE — ARCADE MINIMAL DESIGN SYSTEM
+   White / Black / Pixel Aesthetic
+   ============================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --black: #000000;
+  --white: #ffffff;
+  --gray-50: #f9f9f9;
+  --gray-100: #f0f0f0;
+  --gray-300: #cccccc;
+  --gray-500: #888888;
+  --gray-700: #444444;
+  --accent: #000000;
+  --pixel-border: 2px solid #000000;
+  --pixel-border-thick: 3px solid #000000;
+  --pixel-shadow: 4px 4px 0px #000000;
+  --pixel-shadow-sm: 2px 2px 0px #000000;
+  --font-pixel: var(--font-press-start);
+  --font-mono: var(--font-space-mono);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ---- Reset & Base ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--white);
+  color: var(--black);
+  font-family: var(--font-mono), 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  width: 100vw;
+}
+
+/* ---- Typography ---- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-pixel), 'Courier New', monospace;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: var(--black);
+  text-decoration: none;
+}
+
+/* ---- Pixel Box (card) ---- */
+.pixel-box {
+  border: var(--pixel-border);
+  background: var(--white);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.pixel-box:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--pixel-shadow);
+}
+
+/* ---- Pixel Button ---- */
+.pixel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: var(--pixel-border);
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-pixel), monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-shadow: var(--pixel-shadow-sm);
+  user-select: none;
+  text-transform: uppercase;
+}
+
+.pixel-btn:hover {
+  background: var(--white);
+  color: var(--black);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--pixel-shadow);
+}
+
+.pixel-btn:active {
+  transform: translate(0, 0);
+  box-shadow: none;
+}
+
+/* Outline variant */
+.pixel-btn-outline {
+  background: var(--white);
+  color: var(--black);
+}
+
+.pixel-btn-outline:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+/* ---- Pixel Tag / Badge ---- */
+.pixel-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border: var(--pixel-border);
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--black);
+  color: var(--white);
+  line-height: 1.4;
+}
+
+.pixel-tag-outline {
+  background: var(--white);
+  color: var(--black);
+}
+
+.pixel-tag-gray {
+  background: var(--gray-300);
+  color: var(--gray-700);
+  border-color: var(--gray-500);
+}
+
+/* ---- Price Range Tag ---- */
+.price-range {
+  font-family: var(--font-pixel), monospace;
+  font-size: 11px;
+  color: var(--black);
+  word-break: break-word;
+}
+
+.price-range-sm {
+  font-size: 9px;
+}
+
+/* ---- Scanline Texture (hero only) ---- */
+.scanline-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanline-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scanline-bg>* {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- Category Tile ---- */
+.category-tile {
+  border: var(--pixel-border);
+  background: var(--white);
+  padding: 20px 16px;
+  text-align: center;
+  transition: all 0.1s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.category-tile:hover {
+  background: var(--black);
+  color: var(--white);
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0px var(--gray-300);
+}
+
+.category-tile:hover svg path,
+.category-tile:hover svg rect,
+.category-tile:hover svg polygon,
+.category-tile:hover svg circle,
+.category-tile:hover svg line {
+  stroke: var(--white) !important;
+  fill: var(--white) !important;
+}
+
+.category-tile-name {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.category-tile-count {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  color: var(--gray-500);
+  text-transform: uppercase;
+}
+
+.category-tile:hover .category-tile-count {
+  color: var(--gray-300);
+}
+
+/* Coming Soon Tile */
+.category-tile-coming {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
+.category-tile-coming:hover {
+  background: var(--white);
+  color: var(--black);
+  transform: none;
+  box-shadow: none;
+}
+
+/* ---- Product Card ---- */
+.product-card {
+  border: var(--pixel-border);
+  background: var(--white);
+  overflow: hidden;
+  transition: all 0.1s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0px var(--black);
+}
+
+.product-card-image {
+  aspect-ratio: 1;
+  position: relative;
+  overflow: hidden;
+  border-bottom: var(--pixel-border);
+  background: var(--white);
+}
+
+.product-card-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.product-card-title {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--black);
+}
+
+/* ---- Input / Search ---- */
+.pixel-input {
+  border: var(--pixel-border);
+  background: var(--white);
+  color: var(--black);
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  padding: 12px 16px;
+  outline: none;
+  width: 100%;
+  transition: box-shadow 0.1s ease;
+}
+
+.pixel-input:focus {
+  box-shadow: var(--pixel-shadow-sm);
+}
+
+.pixel-input::placeholder {
+  color: var(--gray-500);
+  font-family: var(--font-mono), monospace;
+}
+
+/* ---- Section title ---- */
+.section-title {
+  font-family: var(--font-pixel), monospace;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: var(--pixel-border);
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+}
+
+/* ---- Breadcrumb ---- */
+.breadcrumb {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.breadcrumb a {
+  color: var(--gray-500);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.breadcrumb a:hover {
+  color: var(--black);
+}
+
+.breadcrumb-sep {
+  color: var(--gray-300);
+}
+
+/* ---- Spec Table ---- */
+.spec-table {
+  width: 100%;
+  border: var(--pixel-border);
+  border-collapse: collapse;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+}
+
+.spec-table tr:nth-child(even) {
+  background: var(--gray-50);
+}
+
+.spec-table td {
+  padding: 10px 14px;
+  border: 1px solid var(--gray-300);
+  vertical-align: top;
+}
+
+.spec-table td:first-child {
+  font-weight: 700;
+  color: var(--black);
+  width: 40%;
+  background: var(--gray-100);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+
+/* ---- Blinking cursor effect (decorative) ---- */
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.cursor-blink::after {
+  content: '_';
+  animation: blink 1s step-end infinite;
+  font-family: var(--font-pixel), monospace;
+}
+
+/* ---- Utility ---- */
+.container-retro {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 12px;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+@media (min-width: 640px) {
+  .container-retro {
+    padding: 0 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-retro {
+    padding: 0 32px;
+  }
+}
+
+/* ---- Prose override for product descriptions ---- */
+.prose-retro {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--gray-700);
+}
+
+.prose-retro p {
+  margin-bottom: 12px;
+}
+
+.prose-retro ul {
+  margin-left: 20px;
+  margin-bottom: 12px;
+}
+
+.prose-retro li {
+  margin-bottom: 4px;
+  list-style: square;
+}
+
+.prose-retro h2,
+.prose-retro h3 {
+  font-family: var(--font-pixel), monospace;
+  font-size: 11px;
+  margin-top: 20px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* ---- WhatsApp Sticky Button ---- */
+.wa-sticky {
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  z-index: 50;
+}
+
+@media (min-width: 768px) {
+  .wa-sticky {
+    display: none;
+  }
+}
+
+/* ---- Animations ---- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+/* ---- Selection ---- */
+::selection {
+  background: var(--black);
+  color: var(--white);
 }

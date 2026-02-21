@@ -3,38 +3,40 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { woo } from '@/lib/woocommerce';
-import { formatPrice, getBrandName, getProductCondition, getWarrantyPeriod } from '@/lib/utils';
+import { formatPriceRange, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
+import CategoryIcon from '@/components/CategoryIcon';
 
 interface CategoryPageProps {
-  params: { slug: string };
-  searchParams: { page?: string };
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 // ISR: revalidate every 60 minutes
 export const revalidate = 3600;
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const category = await woo.getCategoryBySlug(params.slug);
+  const { slug } = await params;
+  const category = await woo.getCategoryBySlug(slug);
 
   if (!category) {
-    return {
-      title: 'Category Not Found',
-    };
+    return { title: 'Category Not Found' };
   }
 
   return {
-    title: `${category.name} - PC Wala Online`,
-    description: category.description || `Browse our ${category.name} collection`,
+    title: `${category.name} — PC Wala Online`,
+    description: category.description || `Shop ${category.name} at PC Wala Online. Competitive prices, WhatsApp ordering.`,
   };
 }
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
-  const page = parseInt(searchParams.page || '1');
-  const perPage = 20;
+  const { slug } = await params;
+  const { page: pageParam } = await searchParams;
+  const page = parseInt(pageParam || '1');
+  const perPage = 40;
 
   const [category, products] = await Promise.all([
-    woo.getCategoryBySlug(params.slug),
-    woo.getProductsByCategory(params.slug, {
+    woo.getCategoryBySlug(slug),
+    woo.getProductsByCategory(slug, {
       page,
       per_page: perPage,
       orderby: 'date',
@@ -47,162 +49,189 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumbs */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-2">
-            <li>
-              <Link href="/" className="text-gray-500 hover:text-gray-700">
-                Home
-              </Link>
-            </li>
-            <span className="text-gray-400">/</span>
-            <li className="text-gray-900 font-medium">{category.name}</li>
-          </ol>
-        </nav>
+    <div style={{ minHeight: '100vh', background: '#fff' }}>
 
-        {/* Category Header */}
-        <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
-          <div className="flex items-center">
-            {category.image && (
-              <div className="relative w-24 h-24 mr-6">
-                <Image
-                  src={category.image.src}
-                  alt={category.image.alt || category.name}
-                  fill
-                  className="object-cover rounded-lg"
-                />
-              </div>
-            )}
+      {/* Category Header */}
+      <div style={{
+        borderBottom: '2px solid #000',
+        background: '#000',
+        color: '#fff',
+        padding: '32px 16px',
+      }}>
+        <div className="container-retro">
+          {/* Breadcrumb */}
+          <nav className="breadcrumb" style={{ color: '#aaa', marginBottom: '16px' }}>
+            <Link href="/" style={{ color: '#aaa' }}>HOME</Link>
+            <span className="breadcrumb-sep">&gt;</span>
+            <span style={{ color: '#fff' }}>{category.name.toUpperCase()}</span>
+          </nav>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ opacity: 0.9, filter: 'invert(1)' }}>
+              <CategoryIcon slug={slug} size={36} color="#000" />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {category.name}
+              <h1 style={{
+                fontFamily: 'var(--font-pixel), monospace',
+                fontSize: 'clamp(13px, 3vw, 20px)',
+                color: '#fff',
+                marginBottom: '6px',
+                letterSpacing: '-0.01em',
+              }}>
+                {category.name.toUpperCase()}
               </h1>
-              {category.description && (
-                <p className="text-gray-600">{category.description}</p>
-              )}
-              <p className="text-sm text-gray-500 mt-2">
-                {category.count} products
+              <p style={{
+                fontFamily: 'var(--font-mono), monospace',
+                fontSize: '11px',
+                color: '#aaa',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}>
+                {category.count} product{category.count !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Products Grid */}
+      <div className="container-retro" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+
         {products.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <Link
-                  key={product.id}
-                  href={`/product/${product.slug}`}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
-                >
-                  {/* Product Image */}
-                  <div className="relative aspect-square">
-                    {product.images.length > 0 ? (
-                      <Image
-                        src={product.images[0].src}
-                        alt={product.images[0].alt || product.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-400">No image</span>
-                      </div>
-                    )}
-                  </div>
+            {/* Products Grid */}
+            <div style={{
+              display: 'grid',
+              gap: '8px',
+              marginBottom: '32px',
+            }} className="cat-products-grid">
+              {products.map((product) => {
+                const effectivePrice = getEffectivePrice(product);
+                const priceRange = formatPriceRange(effectivePrice);
+                const inStock = product.stock_status === 'instock';
+                const brand = getBrandName(product);
+                const warranty = getWarrantyPeriod(product);
 
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                      {product.name}
-                    </h3>
-                    
-                    {/* Price */}
-                    <div className="mb-3">
-                      {product.sale_price && product.sale_price !== product.regular_price ? (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg font-bold text-red-600">
-                            {formatPrice(product.sale_price)}
-                          </span>
-                          <span className="text-sm text-gray-500 line-through">
-                            {formatPrice(product.regular_price)}
-                          </span>
-                        </div>
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/product/${product.slug}`}
+                    className="product-card"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    {/* Image */}
+                    <div className="product-card-image">
+                      <span className={`pixel-tag ${inStock ? '' : 'pixel-tag-gray'}`} style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        zIndex: 10,
+                        fontSize: '9px',
+                        padding: '4px 6px',
+                        boxShadow: 'none'
+                      }}>
+                        {inStock ? 'IN STOCK' : 'OUT OF STOCK'}
+                      </span>
+                      {product.images.length > 0 ? (
+                        <Image
+                          src={product.images[0].src}
+                          alt={product.images[0].alt || product.name}
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          style={{ padding: '16px' }}
+                        />
                       ) : (
-                        <span className="text-lg font-bold text-gray-900">
-                          {formatPrice(product.price)}
+                        <div style={{
+                          width: '100%', height: '100%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: '#f0f0f0',
+                        }}>
+                          <CategoryIcon slug={slug} size={40} color="#ccc" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="product-card-body">
+                      <h3 className="product-card-title">{product.name}</h3>
+
+                      {(brand || warranty) && (
+                        <span style={{
+                          fontFamily: 'var(--font-mono), monospace',
+                          fontSize: '10px',
+                          color: '#888',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                        }}>
+                          {[brand, warranty].filter(Boolean).join(' | ')}
                         </span>
                       )}
-                    </div>
 
-                    {/* Brand, Condition, Warranty */}
-                    <div className="space-y-1 mb-3 text-sm">
-                      {getBrandName(product) && (
-                        <div className="flex items-center text-gray-600">
-                          <span className="font-medium">Brand:</span>
-                          <span className="ml-1">{getBrandName(product)}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center text-gray-600">
-                        <span className="font-medium">Condition:</span>
-                        <span className="ml-1">{getProductCondition(product)}</span>
-                      </div>
-                      {getWarrantyPeriod(product) && (
-                        <div className="flex items-center text-gray-600">
-                          <span className="font-medium">Warranty:</span>
-                          <span className="ml-1">{getWarrantyPeriod(product)}</span>
-                        </div>
-                      )}
+                      <div className="price-range price-range-sm">{priceRange}</div>
                     </div>
-
-                    {/* Stock Status */}
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      product.stock_status === 'instock' 
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {product.stock_status === 'instock' ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
 
-            {/* Pagination (basic) */}
+            {/* Pagination */}
             {products.length === perPage && (
-              <div className="mt-8 flex justify-center">
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+                {page > 1 && (
+                  <Link
+                    href={`/category/${slug}?page=${page - 1}`}
+                    className="pixel-btn pixel-btn-outline"
+                  >
+                    ← PREV PAGE
+                  </Link>
+                )}
                 <Link
-                  href={`/category/${params.slug}?page=${page + 1}`}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  href={`/category/${slug}?page=${page + 1}`}
+                  className="pixel-btn"
                 >
-                  Load More Products
+                  NEXT PAGE →
                 </Link>
               </div>
             )}
+
+            <style>{`
+            .cat-products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            @media (min-width: 600px)  { .cat-products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+            @media (min-width: 900px)  { .cat-products-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+            @media (min-width: 1200px) { .cat-products-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+          `}</style>
           </>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              No products found
+          <div style={{
+            border: '2px solid #000',
+            padding: '64px 24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ marginBottom: '16px' }}>
+              <CategoryIcon slug={slug} size={48} color="#ccc" />
+            </div>
+            <h2 style={{
+              fontFamily: 'var(--font-pixel), monospace',
+              fontSize: '12px',
+              marginBottom: '12px',
+              color: '#000',
+            }}>
+              COMING SOON
             </h2>
-            <p className="text-gray-600 mb-6">
-              This category doesn&apos;t have any products yet.
+            <p style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: '12px',
+              color: '#888',
+              marginBottom: '24px',
+            }}>
+              No products in this category yet. We&apos;re stocking up!
             </p>
-            <Link
-              href="/"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              Browse All Categories
+            <Link href="/" className="pixel-btn">
+              ← BACK TO HOME
             </Link>
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }
-

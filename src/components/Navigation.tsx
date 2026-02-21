@@ -3,153 +3,291 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
+const NAV_CATEGORIES = [
+  { name: 'Processors', slug: 'cpus' },
+  { name: 'Motherboards', slug: 'motherboards' },
+  { name: 'Graphics', slug: 'gpus' },
+  { name: 'RAM', slug: 'ram' },
+  { name: 'Storage', slug: 'storage' },
+  { name: 'PSU', slug: 'power-supplies' },
+  { name: 'Cases', slug: 'pc-cases' },
+];
+
+const ALL_CATEGORIES = [
+  ...NAV_CATEGORIES,
+  { name: 'Coolers', slug: 'cpu-coolers' },
+  { name: 'Laptops', slug: 'laptops' },
+  { name: 'Monitors', slug: 'monitors' },
+  { name: 'Prebuilt PCs', slug: 'prebuilt-pcs' },
+  { name: 'Peripherals', slug: 'peripherals' },
+];
+
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const categories = [
-    { name: 'Prebuilt PCs', slug: 'prebuilt-pcs' },
-    { name: 'Custom PCs', slug: 'custom-pcs' },
-    { name: 'Laptops', slug: 'laptops' },
-    { name: 'Components', slug: 'components' },
-    { name: 'Monitors', slug: 'monitors' },
-    { name: 'Peripherals', slug: 'peripherals' },
-  ];
-
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <span className="text-2xl font-bold text-gray-900">PC Wala Online</span>
+    <nav
+      style={{
+        background: '#fff',
+        borderBottom: '2px solid #000',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+      }}
+    >
+      {/* Top Bar */}
+      <div
+        className="nav-container"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '60px',
+          width: '100%',
+          padding: '0 16px',
+        }}
+      >
+        {/* Logo */}
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', lineHeight: 1, flexShrink: 0 }}>
+          <span style={{
+            fontFamily: 'var(--font-pixel), monospace',
+            fontSize: '13px',
+            fontWeight: '400',
+            color: '#000',
+            letterSpacing: '-0.02em',
+          }}>
+            PC WALA
+          </span>
+          <span style={{
+            fontFamily: 'var(--font-pixel), monospace',
+            fontSize: '9px',
+            color: '#555',
+            letterSpacing: '0.08em',
+            marginTop: '2px',
+          }}>
+            ONLINE
+          </span>
+        </Link>
+
+        {/* Desktop Main Categories */}
+        <div className="desktop-categories" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexGrow: 1, justifyContent: 'center' }}>
+          {NAV_CATEGORIES.map((cat) => (
+            <Link
+              key={cat.slug}
+              href={`/category/${cat.slug}`}
+              style={{
+                fontFamily: 'var(--font-mono), monospace',
+                fontSize: '11px',
+                fontWeight: '700',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                color: '#000',
+                textDecoration: 'none',
+                transition: 'all 0.1s',
+                padding: '4px 8px',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = '#000';
+                (e.currentTarget as HTMLElement).style.color = '#fff';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'transparent';
+                (e.currentTarget as HTMLElement).style.color = '#000';
+              }}
+            >
+              {cat.name}
+            </Link>
+          ))}
+        </div>
+
+        {/* Right Actions (Search + WhatsApp + Mobile Menu) */}
+        <div className="right-actions-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <Link
+            href="/search"
+            className="search-btn"
+            style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              color: '#000',
+              textDecoration: 'none',
+              border: '2px solid transparent',
+              transition: 'all 0.1s',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.borderColor = '#000';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
+            }}
+          >
+            <span className="search-icon">⌕</span>
+            <span className="search-text">Search</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-            >
-              Home
-            </Link>
-            
-            {/* Categories Dropdown */}
-            <div className="relative group">
-              <button className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium flex items-center">
-                Categories
-                <svg className="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-              
-              <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                <div className="py-2">
-                  {categories.map((category) => (
-                    <Link
-                      key={category.slug}
-                      href={`/category/${category.slug}`}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <a
+            href={`https://wa.me/923423355119`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pixel-btn whatsapp-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
+            }}
+          >
+            <span className="whatsapp-icon">▶</span>
+            <span className="whatsapp-text">WhatsApp</span>
+          </a>
 
-            <Link
-              href="/search"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-            >
-              Search
-            </Link>
-            
-            <Link
-              href="/about"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-            >
-              About
-            </Link>
-            
-            <Link
-              href="/contact"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-            >
-              Contact
-            </Link>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-gray-900 p-2"
-            >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
+          {/* Mobile Hamburger */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            style={{
+              background: 'none',
+              border: '2px solid #000',
+              padding: '6px 8px',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: '14px',
+              lineHeight: 1,
+              color: '#000',
+            }}
+            className="mobile-menu-btn"
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? '✕' : '☰'}
+          </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu Content */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link
-              href="/"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            
-            <div className="px-3 py-2 text-base font-medium text-gray-900">Categories</div>
-            
-            {categories.map((category) => (
+        <div className="mobile-menu-content" style={{
+          borderTop: '2px solid #000',
+          background: '#fff',
+          padding: '16px',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{
+              fontFamily: 'var(--font-pixel), monospace',
+              fontSize: '9px',
+              color: '#888',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              padding: '8px 0 4px',
+              borderBottom: '1px solid #000',
+              marginBottom: '8px',
+            }}>
+              All Categories
+            </div>
+            {ALL_CATEGORIES.map((cat) => (
               <Link
-                key={category.slug}
-                href={`/category/${category.slug}`}
-                className="block px-6 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                key={cat.slug}
+                href={`/category/${cat.slug}`}
                 onClick={() => setIsMenuOpen(false)}
+                style={{
+                  fontFamily: 'var(--font-mono), monospace',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  padding: '10px 12px',
+                  color: '#000',
+                  borderLeft: '3px solid transparent',
+                  transition: 'all 0.1s',
+                  textDecoration: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderLeftColor = '#000';
+                  (e.currentTarget as HTMLElement).style.background = '#f0f0f0';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderLeftColor = 'transparent';
+                  (e.currentTarget as HTMLElement).style.background = 'transparent';
+                }}
               >
-                {category.name}
+                {cat.name}
               </Link>
             ))}
-            
-            <Link
-              href="/search"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Search
-            </Link>
-            
-            <Link
-              href="/about"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
-            </Link>
-            
-            <Link
-              href="/contact"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Contact
-            </Link>
           </div>
         </div>
       )}
+
+      {/* Responsive Styles */}
+      <style>{`
+        .nav-container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        
+        /* Desktop Defaults */
+        .desktop-categories { display: flex; }
+        .mobile-menu-btn { display: none; }
+        .mobile-menu-content { display: none; }
+        
+        .search-btn {
+          font-size: 11px;
+          letter-spacing: 0.06em;
+          padding: 8px 14px;
+        }
+        .search-icon {
+          font-size: 14px;
+          margin-right: 4px;
+        }
+        .search-text { display: inline; }
+
+        .whatsapp-btn {
+          font-size: 10px;
+          padding: 8px 14px;
+        }
+        .whatsapp-icon {
+          margin-right: 4px;
+        }
+        .whatsapp-text { display: inline; }
+
+        /* Mobile Overrides */
+        @media (max-width: 850px) {
+          .nav-container {
+            padding: 0 10px !important;
+          }
+          .desktop-categories { display: none !important; }
+          .mobile-menu-btn { display: block !important; }
+          .mobile-menu-content { display: block; }
+          
+          .right-actions-container {
+            gap: 4px !important;
+          }
+          
+          /* Search icon only on mobile */
+          .search-btn {
+            padding: 4px 6px !important;
+            border: 2px solid transparent !important;
+          }
+          .search-text { display: none; }
+          .search-icon { margin-right: 0; font-size: 18px; font-weight: bold; }
+
+          /* WhatsApp text button on mobile */
+          .whatsapp-btn {
+            padding: 6px 6px !important;
+            font-size: 8px !important;
+          }
+          .whatsapp-icon { font-size: 8px; margin-right: 2px; }
+          
+          .mobile-menu-btn {
+            padding: 4px 6px !important;
+            font-size: 14px !important;
+          }
+        }
+        
+        @media (max-width: 360px) {
+          .whatsapp-text { display: none; }
+          .whatsapp-icon { margin-right: 0; font-size: 12px; }
+        }
+      `}</style>
     </nav>
   );
 }
-
-

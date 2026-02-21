@@ -4,204 +4,259 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { woo } from '@/lib/woocommerce';
 import WhatsAppButton from '@/components/WhatsAppButton';
-import { formatPrice, getBrandName, getProductCondition, getWarrantyPeriod, getWarrantyType } from '@/lib/utils';
+import ProductGallery from '@/components/ProductGallery';
+import { formatPriceRange, getEffectivePrice, getBrandName, getProductCondition, getWarrantyPeriod, getWarrantyType } from '@/lib/utils';
 
 interface ProductPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 // ISR: revalidate every 30 minutes
 export const revalidate = 1800;
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const product = await woo.getProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await woo.getProductBySlug(slug);
 
   if (!product) {
-    return {
-      title: 'Product Not Found',
-    };
+    return { title: 'Product Not Found' };
   }
 
+  const priceRange = formatPriceRange(getEffectivePrice(product));
+
   return {
-    title: `${product.name} - PC Wala Online`,
-    description: product.short_description || product.description,
+    title: `${product.name} — PC Wala Online`,
+    description: `${product.name} | ${priceRange} | Order via WhatsApp`,
     openGraph: {
       title: product.name,
-      description: product.short_description || product.description,
+      description: `${product.name} | ${priceRange}`,
       images: product.images.length > 0 ? [product.images[0].src] : [],
     },
   };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const product = await woo.getProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await woo.getProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
+  const effectivePrice = getEffectivePrice(product);
+  const priceRange = formatPriceRange(effectivePrice);
+  const inStock = product.stock_status === 'instock';
+  const brand = getBrandName(product);
+  const condition = getProductCondition(product);
+  const warranty = getWarrantyPeriod(product);
+  const warrantyType = getWarrantyType(product);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumbs */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-2">
-            <li>
-              <Link href="/" className="text-gray-500 hover:text-gray-700">
-                Home
+    <div style={{ minHeight: '100vh', background: '#fff' }}>
+      <div className="container-retro" style={{ paddingTop: '24px', paddingBottom: '64px' }}>
+
+        {/* Breadcrumb */}
+        <nav className="breadcrumb">
+          <Link href="/">HOME</Link>
+          {product.categories.length > 0 && (
+            <>
+              <span className="breadcrumb-sep">&gt;</span>
+              <Link href={`/category/${product.categories[0].slug}`}>
+                {product.categories[0].name.toUpperCase()}
               </Link>
-            </li>
-            {product.categories.length > 0 && (
-              <>
-                <span className="text-gray-400">/</span>
-                <li>
-                  <Link 
-                    href={`/category/${product.categories[0].slug}`}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    {product.categories[0].name}
-                  </Link>
-                </li>
-              </>
-            )}
-            <span className="text-gray-400">/</span>
-            <li className="text-gray-900 font-medium">{product.name}</li>
-          </ol>
+            </>
+          )}
+          <span className="breadcrumb-sep">&gt;</span>
+          <span style={{ color: '#000', fontWeight: 700 }}>
+            {product.name.length > 30 ? product.name.substring(0, 30) + '...' : product.name}
+          </span>
         </nav>
 
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="md:flex">
-            {/* Product Image */}
-            <div className="md:w-1/2">
-              {product.images.length > 0 ? (
-                <div className="relative aspect-square">
-                  <Image
-                    src={product.images[0].src}
-                    alt={product.images[0].alt || product.name}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
-              ) : (
-                <div className="aspect-square bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-400">No image available</span>
-                </div>
-              )}
-            </div>
+        {/* Main product grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr',
+          gap: '0',
+          border: '2px solid #000',
+        }} className="product-detail-grid">
 
-            {/* Product Details */}
-            <div className="md:w-1/2 p-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                {product.name}
-              </h1>
-
-              {/* Price */}
-              <div className="mb-6">
-                {product.sale_price && product.sale_price !== product.regular_price ? (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-3xl font-bold text-red-600">
-                      {formatPrice(product.sale_price)}
-                    </span>
-                    <span className="text-xl text-gray-500 line-through">
-                      {formatPrice(product.regular_price)}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-3xl font-bold text-gray-900">
-                    {formatPrice(product.price)}
-                  </span>
-                )}
-              </div>
-
-              {/* Product Info Grid */}
-              <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-                {getBrandName(product) && (
-                  <div>
-                    <span className="font-medium text-gray-900">Brand:</span>
-                    <p className="text-gray-700">{getBrandName(product)}</p>
-                  </div>
-                )}
-                <div>
-                  <span className="font-medium text-gray-900">Condition:</span>
-                  <p className="text-gray-700">{getProductCondition(product)}</p>
-                </div>
-                {getWarrantyPeriod(product) && (
-                  <div>
-                    <span className="font-medium text-gray-900">Warranty Period:</span>
-                    <p className="text-gray-700">{getWarrantyPeriod(product)}</p>
-                  </div>
-                )}
-                {getWarrantyType(product) && (
-                  <div>
-                    <span className="font-medium text-gray-900">Warranty Type:</span>
-                    <p className="text-gray-700">{getWarrantyType(product)}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* SKU */}
-              {product.sku && (
-                <p className="text-sm text-gray-600 mb-4">
-                  SKU: <span className="font-mono">{product.sku}</span>
-                </p>
-              )}
-
-              {/* Stock Status */}
-              <div className="mb-6">
-                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                  product.stock_status === 'instock' 
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {product.stock_status === 'instock' ? 'In Stock' : 'Out of Stock'}
-                </span>
-              </div>
-
-              {/* Short Description */}
-              {product.short_description && (
-                <div 
-                  className="text-gray-700 mb-6"
-                  dangerouslySetInnerHTML={{ __html: product.short_description }}
-                />
-              )}
-
-              {/* Specifications (moved below short description) */}
-              {product.attributes.length > 0 && (
-                <div className="mt-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">Specifications</h2>
-                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                    {product.attributes.map((attr) => (
-                      <div key={attr.id} className="flex flex-col">
-                        <dt className="text-sm text-gray-600">{attr.name}</dt>
-                        <dd className="text-sm text-gray-900">{attr.options.join(', ')}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              )}
-
-              {/* WhatsApp Order Button */}
-              <WhatsAppButton product={product} />
-            </div>
+          {/* Left: Image Gallery */}
+          <div style={{
+            position: 'relative',
+          }} className="product-detail-image">
+            <ProductGallery images={product.images} productName={product.name} />
           </div>
 
-          {/* Full Description */}
-          {product.description && (
-            <div className="p-8 border-t border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Description</h2>
-              <div 
-                className="prose prose-gray max-w-none"
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-            </div>
-          )}
+          {/* Right: Details */}
+          <div style={{ padding: '24px' }}>
 
-          
+            {/* Stock Tag */}
+            <div style={{ marginBottom: '12px' }}>
+              <span className={`pixel-tag ${inStock ? '' : 'pixel-tag-gray'}`} style={{ fontSize: '9px' }}>
+                {inStock ? '● IN STOCK' : '○ OUT OF STOCK'}
+              </span>
+            </div>
+
+            {/* Product Name */}
+            <h1 style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontWeight: '700',
+              fontSize: 'clamp(14px, 3vw, 20px)',
+              lineHeight: 1.4,
+              marginBottom: '16px',
+              color: '#000',
+            }}>
+              {product.name}
+            </h1>
+
+            {/* Price Range — hero element */}
+            <div style={{
+              border: '2px solid #000',
+              padding: '16px',
+              marginBottom: '20px',
+              background: '#f9f9f9',
+            }}>
+              <div style={{
+                fontFamily: 'var(--font-mono), monospace',
+                fontSize: '10px',
+                color: '#888',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                marginBottom: '6px',
+              }}>
+                Price Range
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-pixel), monospace',
+                fontSize: 'clamp(10px, 2.5vw, 14px)',
+                color: '#000',
+                letterSpacing: '-0.01em',
+                lineHeight: 1.5,
+              }}>
+                {priceRange}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-mono), monospace',
+                fontSize: '10px',
+                color: '#888',
+                marginTop: '6px',
+              }}>
+                Final price confirmed on WhatsApp
+              </div>
+            </div>
+
+            {/* Quick Info Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '8px',
+              marginBottom: '20px',
+            }}>
+              {brand && (
+                <div style={{ borderLeft: '3px solid #000', paddingLeft: '10px' }}>
+                  <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', color: '#888', textTransform: 'uppercase', marginBottom: '2px' }}>Brand</div>
+                  <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '12px', fontWeight: '700' }}>{brand}</div>
+                </div>
+              )}
+              <div style={{ borderLeft: '3px solid #000', paddingLeft: '10px' }}>
+                <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', color: '#888', textTransform: 'uppercase', marginBottom: '2px' }}>Condition</div>
+                <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '12px', fontWeight: '700' }}>{condition}</div>
+              </div>
+              {warranty && (
+                <div style={{ borderLeft: '3px solid #000', paddingLeft: '10px' }}>
+                  <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', color: '#888', textTransform: 'uppercase', marginBottom: '2px' }}>Warranty</div>
+                  <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '12px', fontWeight: '700' }}>{warranty}</div>
+                </div>
+              )}
+              {warrantyType && (
+                <div style={{ borderLeft: '3px solid #000', paddingLeft: '10px' }}>
+                  <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', color: '#888', textTransform: 'uppercase', marginBottom: '2px' }}>Warranty Type</div>
+                  <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '12px', fontWeight: '700' }}>{warrantyType}</div>
+                </div>
+              )}
+              {product.sku && (
+                <div style={{ borderLeft: '3px solid #000', paddingLeft: '10px' }}>
+                  <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', color: '#888', textTransform: 'uppercase', marginBottom: '2px' }}>SKU</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>{product.sku}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Short Description */}
+            {product.short_description && (
+              <div
+                className="prose-retro"
+                style={{ marginBottom: '20px', paddingLeft: '12px', borderLeft: '3px solid #e0e0e0' }}
+                dangerouslySetInnerHTML={{ __html: product.short_description }}
+              />
+            )}
+
+            {/* WhatsApp Button */}
+            <WhatsAppButton product={product} />
+          </div>
+        </div>
+
+        {/* Specifications Table */}
+        {product.attributes.length > 0 && (
+          <div style={{ marginTop: '32px' }}>
+            <h2 className="section-title">{"// Specifications"}</h2>
+            <table className="spec-table">
+              <tbody>
+                {product.attributes.map((attr, index) => (
+                  <tr key={`${attr.id}-${attr.name}-${index}`}>
+                    <td>{attr.name}</td>
+                    <td>{attr.options.join(', ')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Full Description */}
+        {product.description && (
+          <div style={{ marginTop: '32px' }}>
+            <h2 className="section-title">{"// Description"}</h2>
+            <div
+              className="prose-retro"
+              style={{
+                border: '2px solid #000',
+                padding: '24px',
+              }}
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
+          </div>
+        )}
+
+        {/* Back Link */}
+        <div style={{ marginTop: '32px' }}>
+          {product.categories.length > 0 ? (
+            <Link href={`/category/${product.categories[0].slug}`} className="pixel-btn pixel-btn-outline">
+              ← Back to {product.categories[0].name}
+            </Link>
+          ) : (
+            <Link href="/" className="pixel-btn pixel-btn-outline">
+              ← Back to Home
+            </Link>
+          )}
         </div>
       </div>
+
+      {/* Sticky WhatsApp button on mobile */}
+      <WhatsAppButton product={product} variant="sticky" />
+
+      <style>{`
+        @media (min-width: 768px) {
+          .product-detail-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .product-detail-image {
+            border-bottom: none !important;
+            border-right: 2px solid #000;
+            min-height: 480px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
-
-
