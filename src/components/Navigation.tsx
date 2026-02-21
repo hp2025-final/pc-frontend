@@ -3,26 +3,57 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-const NAV_CATEGORIES = [
-  { name: 'Processors', slug: 'cpus' },
-  { name: 'Motherboards', slug: 'motherboards' },
-  { name: 'Graphics', slug: 'gpus' },
-  { name: 'RAM', slug: 'ram' },
-  { name: 'Storage', slug: 'storage' },
-  { name: 'PSU', slug: 'power-supplies' },
-  { name: 'Cases', slug: 'pc-cases' },
-];
+import { MAIN_CATEGORIES, MEGA_SECTIONS } from '@/lib/constants';
 
-const ALL_CATEGORIES = [
-  ...NAV_CATEGORIES,
-  { name: 'Coolers', slug: 'cpu-coolers' },
-  { name: 'Laptops', slug: 'laptops' },
-  { name: 'Monitors', slug: 'monitors' },
-  { name: 'Prebuilt PCs', slug: 'prebuilt-pcs' },
-  { name: 'Peripherals', slug: 'peripherals' },
-];
+function NavItem({ item, countMap, isMobile, onClick }: { item: { name: string, slug: string }, countMap: Record<string, number>, isMobile?: boolean, onClick?: () => void }) {
+  const count = countMap[item.slug] || 0;
+  const isLive = count > 0;
 
-export default function Navigation() {
+  if (!isLive) {
+    return (
+      <div className={isMobile ? "mobile-nav-item disabled" : "nav-item disabled"}>
+        {item.name}
+        <span className="pixel-tag pixel-tag-gray" style={{ fontSize: '8px', padding: '2px 4px', marginLeft: '6px', boxShadow: 'none' }}>SOON</span>
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/category/${item.slug}`}
+      onClick={onClick}
+      className={isMobile ? "mobile-nav-item" : "nav-item"}
+    >
+      {item.name}
+    </Link>
+  );
+}
+
+function MegaItem({ item, countMap }: { item: { name: string, slug: string }, countMap: Record<string, number> }) {
+  const count = countMap[item.slug] || 0;
+  const isLive = count > 0;
+
+  if (!isLive) {
+    return (
+      <div className="mega-item disabled" style={{ display: 'flex', alignItems: 'center' }}>
+        {item.name}
+        <span className="pixel-tag pixel-tag-gray" style={{ fontSize: '8px', padding: '2px 4px', marginLeft: '6px', boxShadow: 'none' }}>SOON</span>
+      </div>
+    );
+  }
+
+  return (
+    <Link href={`/category/${item.slug}`} className="mega-item">
+      {item.name}
+    </Link>
+  );
+}
+
+interface NavigationProps {
+  catCountMap?: Record<string, number>;
+}
+
+export default function Navigation({ catCountMap = {} }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -70,34 +101,31 @@ export default function Navigation() {
         </Link>
 
         {/* Desktop Main Categories */}
-        <div className="desktop-categories" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexGrow: 1, justifyContent: 'center' }}>
-          {NAV_CATEGORIES.map((cat) => (
-            <Link
-              key={cat.slug}
-              href={`/category/${cat.slug}`}
-              style={{
-                fontFamily: 'var(--font-mono), monospace',
-                fontSize: '11px',
-                fontWeight: '700',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                color: '#000',
-                textDecoration: 'none',
-                transition: 'all 0.1s',
-                padding: '4px 8px',
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = '#000';
-                (e.currentTarget as HTMLElement).style.color = '#fff';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'transparent';
-                (e.currentTarget as HTMLElement).style.color = '#000';
-              }}
-            >
-              {cat.name}
-            </Link>
+        <div className="desktop-categories" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexGrow: 1, justifyContent: 'center' }}>
+          {MAIN_CATEGORIES.map((cat) => (
+            <NavItem key={cat.slug} item={cat} countMap={catCountMap} />
           ))}
+
+          {/* Mega Menu Trigger */}
+          <div className="mega-menu-trigger" style={{ padding: '4px 8px' }}>
+            <div className="nav-item" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              MORE <span style={{ fontSize: '8px' }}>▼</span>
+            </div>
+
+            {/* Mega Menu Content */}
+            <div className="mega-menu-content">
+              {MEGA_SECTIONS.map((section) => (
+                <div key={section.title} className="mega-section">
+                  <h3 className="mega-section-title">{section.title}</h3>
+                  <div className="mega-section-list">
+                    {section.items.map((item) => (
+                      <MegaItem key={item.slug} item={item} countMap={catCountMap} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Right Actions (Search + WhatsApp + Mobile Menu) */}
@@ -167,51 +195,30 @@ export default function Navigation() {
       {/* Mobile Menu Content */}
       {isMenuOpen && (
         <div className="mobile-menu-content" style={{
-          borderTop: '2px solid #000',
+          position: 'absolute',
+          top: '60px',
+          left: 0,
+          right: 0,
+          borderBottom: '2px solid #000',
           background: '#fff',
           padding: '16px',
+          maxHeight: 'calc(100vh - 60px)',
+          overflowY: 'auto',
+          zIndex: 99,
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{
-              fontFamily: 'var(--font-pixel), monospace',
-              fontSize: '9px',
-              color: '#888',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              padding: '8px 0 4px',
-              borderBottom: '1px solid #000',
-              marginBottom: '8px',
-            }}>
-              All Categories
-            </div>
-            {ALL_CATEGORIES.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/category/${cat.slug}`}
-                onClick={() => setIsMenuOpen(false)}
-                style={{
-                  fontFamily: 'var(--font-mono), monospace',
-                  fontSize: '12px',
-                  fontWeight: '700',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  padding: '10px 12px',
-                  color: '#000',
-                  borderLeft: '3px solid transparent',
-                  transition: 'all 0.1s',
-                  textDecoration: 'none',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderLeftColor = '#000';
-                  (e.currentTarget as HTMLElement).style.background = '#f0f0f0';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderLeftColor = 'transparent';
-                  (e.currentTarget as HTMLElement).style.background = 'transparent';
-                }}
-              >
-                {cat.name}
-              </Link>
+            <div className="mobile-section-title" style={{ marginTop: 0 }}>Main Categories</div>
+            {MAIN_CATEGORIES.map((cat) => (
+              <NavItem key={cat.slug} item={cat} countMap={catCountMap} isMobile onClick={() => setIsMenuOpen(false)} />
+            ))}
+
+            {MEGA_SECTIONS.map((section) => (
+              <div key={section.title} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className="mobile-section-title">{section.title}</div>
+                {section.items.map((item) => (
+                  <NavItem key={item.slug} item={item} countMap={catCountMap} isMobile onClick={() => setIsMenuOpen(false)} />
+                ))}
+              </div>
             ))}
           </div>
         </div>
@@ -222,12 +229,105 @@ export default function Navigation() {
         .nav-container {
           max-width: 1200px;
           margin: 0 auto;
+          position: relative;
         }
         
+        .nav-item {
+          font-family: var(--font-mono), monospace;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: #000;
+          text-decoration: none;
+          transition: all 0.1s;
+          padding: 6px 8px; /* Slightly larger padding for hit area */
+          display: flex;
+          align-items: center;
+        }
+        .nav-item:not(.disabled):hover {
+          background: #000;
+          color: #fff;
+        }
+        .nav-item.disabled {
+          color: #aaa;
+          cursor: not-allowed;
+        }
+        .nav-item.disabled:hover {
+          background: transparent;
+          color: #aaa;
+        }
+
+        /* Mega menu trigger */
+        .mega-menu-trigger {
+          position: static;
+        }
+        .mega-menu-content {
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 900px;
+          max-width: 95vw;
+          background: #fff;
+          border: 2px solid #000;
+          padding: 32px;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 32px;
+          z-index: 101;
+          box-shadow: 6px 6px 0px rgba(0,0,0,1);
+        }
+        .mega-menu-trigger:hover .mega-menu-content {
+          display: grid;
+        }
+        /* Create an invisible bridge to prevent hover loss */
+        .mega-menu-trigger::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          height: 10px;
+          background: transparent;
+        }
+        
+        .mega-section-title {
+          font-family: var(--font-pixel), monospace;
+          font-size: 10px;
+          color: #000;
+          border-bottom: 2px solid #000;
+          padding-bottom: 8px;
+          margin-bottom: 16px;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .mega-section-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .mega-item {
+          color: #555;
+          font-size: 12px;
+          text-decoration: none;
+          font-family: var(--font-mono), monospace;
+          display: flex;
+          align-items: center;
+          transition: color 0.1s;
+        }
+        .mega-item:not(.disabled):hover {
+          color: #000;
+          text-decoration: underline;
+        }
+        .mega-item.disabled {
+          color: #bbb;
+          cursor: not-allowed;
+        }
+
         /* Desktop Defaults */
         .desktop-categories { display: flex; }
         .mobile-menu-btn { display: none; }
-        .mobile-menu-content { display: none; }
         
         .search-btn {
           font-size: 11px;
@@ -249,14 +349,55 @@ export default function Navigation() {
         }
         .whatsapp-text { display: inline; }
 
+        /* Mobile specific styles inside the opened menu */
+        .mobile-nav-item {
+          font-family: var(--font-mono), monospace;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 10px 12px;
+          color: #000;
+          border-left: 3px solid transparent;
+          transition: all 0.1s;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+        }
+        .mobile-nav-item:not(.disabled):hover {
+          border-left-color: #000;
+          background: #f0f0f0;
+        }
+        .mobile-nav-item.disabled {
+          color: #aaa;
+          cursor: not-allowed;
+        }
+
+        .mobile-section-title {
+          font-family: var(--font-pixel), monospace;
+          font-size: 9px;
+          color: #888;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          padding: 12px 0 4px;
+          border-bottom: 1px solid #eee;
+          margin-bottom: 4px;
+          margin-top: 12px;
+        }
+
         /* Mobile Overrides */
+        @media (min-width: 951px) {
+          .mobile-menu-content { display: none !important; }
+        }
+        @media (max-width: 950px) {
+          .desktop-categories { display: none !important; }
+          .mobile-menu-btn { display: block !important; }
+        }
+        
         @media (max-width: 850px) {
           .nav-container {
             padding: 0 10px !important;
           }
-          .desktop-categories { display: none !important; }
-          .mobile-menu-btn { display: block !important; }
-          .mobile-menu-content { display: block; }
           
           .right-actions-container {
             gap: 4px !important;

@@ -207,7 +207,7 @@ export default function Footer() {
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
           }}>
-            {'// Powered by Next.js'} &amp; WooCommerce
+            {'// Developed by Muhammad +92 316 2694747'}
           </p>
         </div>
       </div>

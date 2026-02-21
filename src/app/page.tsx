@@ -4,34 +4,15 @@ import { woo } from '@/lib/woocommerce';
 import { formatPriceRange, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
 import CategoryIcon from '@/components/CategoryIcon';
 import AnimatedText from '@/components/AnimatedText';
+import { ALL_HOME_CATEGORIES } from '@/lib/constants';
 
 // ISR: revalidate every 2 hours
 export const revalidate = 7200;
 
-// Full master category list — shows all with Coming Soon if empty
-const ALL_CATEGORIES = [
-  { slug: 'pc-cases', name: 'PC Cases' },
-  { slug: 'motherboards', name: 'Motherboards' },
-  { slug: 'gpus', name: 'Graphics Cards' },
-  { slug: 'cpus', name: 'Processors' },
-  { slug: 'ram', name: 'RAM' },
-  { slug: 'storage', name: 'Storage' },
-  { slug: 'power-supplies', name: 'PSU' },
-  { slug: 'cpu-coolers', name: 'CPU Coolers' },
-  { slug: 'case-fans', name: 'Case Fans' },
-  { slug: 'laptops', name: 'Laptops' },
-  { slug: 'monitors', name: 'Monitors' },
-  { slug: 'prebuilt-pcs', name: 'Prebuilt PCs' },
-  { slug: 'printers', name: 'Printers' },
-  { slug: 'peripherals', name: 'Peripherals' },
-  { slug: 'networking', name: 'Networking' },
-  { slug: 'accessories', name: 'Accessories' },
-];
-
 export default async function HomePage() {
   const [wooCategories, latestProducts] = await Promise.all([
     woo.getCategories({ per_page: 100 }),
-    woo.getProducts({ per_page: 12, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('latest-arrival', { per_page: 12, orderby: 'date', order: 'desc' }),
   ]);
 
   // Map WooCommerce category counts by slug
@@ -95,10 +76,10 @@ export default async function HomePage() {
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="#latest-arrivals" className="pixel-btn">
-              ▶ // Latest Arrivals
+              ▶ Latest Arrivals
             </Link>
             <Link href="#shop-by-category" className="pixel-btn pixel-btn-outline">
-              ▦ // Shop by Category
+              ▦ Shop by Category
             </Link>
           </div>
         </div>
@@ -108,15 +89,13 @@ export default async function HomePage() {
 
         {/* ──────────── CATEGORIES ──────────── */}
         <section id="shop-by-category" style={{ marginBottom: '64px', scrollMarginTop: '80px' }}>
-          <h2 className="section-title">{"// Shop by Category"}</h2>
-
           <div style={{
             display: 'grid',
             gap: '12px',
           }}
             className="cat-grid"
           >
-            {ALL_CATEGORIES.map((cat) => {
+            {ALL_HOME_CATEGORIES.map((cat) => {
               const count = catCountMap[cat.slug] ?? 0;
               const isLive = count > 0;
 

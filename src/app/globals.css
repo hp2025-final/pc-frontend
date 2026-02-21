@@ -483,3 +483,34 @@ a {
   background: var(--black);
   color: var(--white);
 }
+
+/* ---- Skeleton Loading Blocks ---- */
+@keyframes pixelShimmer {
+  0% {
+    background-position: -200px 0;
+  }
+
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+.skeleton-block {
+  background: linear-gradient(90deg,
+      #f0f0f0 0px,
+      #e8e8e8 40px,
+      #f0f0f0 80px);
+  background-size: 200px 100%;
+  animation: pixelShimmer 1.2s ease-in-out infinite;
+  border-radius: 0;
+  image-rendering: pixelated;
+}
+
+/* Dark variant for dark background sections */
+.skeleton-dark {
+  background: linear-gradient(90deg,
+      #222 0px,
+      #333 40px,
+      #222 80px);
+  background-size: 200px 100%;
+}
