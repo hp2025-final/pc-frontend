@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { woo } from '@/lib/woocommerce';
+import { woo, WooProduct } from '@/lib/woocommerce';
 
 /**
  * Dynamic Sitemap Generation
@@ -31,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
         // 3. Dynamic Product Routes
         // Fetch multiple pages to ensure we get a good amount of products (up to 300)
-        let allProducts: any[] = [];
+        let allProducts: WooProduct[] = [];
         try {
             const [p1, p2, p3] = await Promise.all([
                 woo.getProducts({ per_page: 100, page: 1 }),

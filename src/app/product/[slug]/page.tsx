@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { woo } from '@/lib/woocommerce';
 import WhatsAppButton from '@/components/WhatsAppButton';
