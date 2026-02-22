@@ -1,0 +1,55 @@
+
+> pc-frontend@0.1.0 build
+> next build --turbopack
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\xampp\htdocs\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\xampp\htdocs\011225-PCWALA\pc-frontend\package-lock.json
+
+   ▲ Next.js 15.5.2 (Turbopack)
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Finished writing to disk in 88ms
+ ✓ Compiled successfully in 7.4s
+   Linting and checking validity of types ...
+
+./src/app/product/[slug]/page.tsx
+3:8  Warning: 'Image' is defined but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/7) ...
+   Generating static pages (1/7) 
+Fetching WooCommerce API: https://woocommerce-1488048-5826980.cloudwaysapps.com/wp-json/wc/v3/products/categories?consumer_key=ck_7f6d6fd81539e05b6feec56954ed88309642d695&consumer_secret=cs_c27dd09f9906b12d36e99c1caba693bf721805cb&per_page=100&orderby=name&order=asc
+Fetching WooCommerce API: https://woocommerce-1488048-5826980.cloudwaysapps.com/wp-json/wc/v3/products/categories?consumer_key=ck_7f6d6fd81539e05b6feec56954ed88309642d695&consumer_secret=cs_c27dd09f9906b12d36e99c1caba693bf721805cb&per_page=100&orderby=name&order=asc
+Fetching WooCommerce API: https://woocommerce-1488048-5826980.cloudwaysapps.com/wp-json/wc/v3/products/categories?consumer_key=ck_7f6d6fd81539e05b6feec56954ed88309642d695&consumer_secret=cs_c27dd09f9906b12d36e99c1caba693bf721805cb&per_page=100&orderby=name&order=asc
+Fetching WooCommerce API: https://woocommerce-1488048-5826980.cloudwaysapps.com/wp-json/wc/v3/products/categories?consumer_key=ck_7f6d6fd81539e05b6feec56954ed88309642d695&consumer_secret=cs_c27dd09f9906b12d36e99c1caba693bf721805cb&slug=latest-arrival
+Fetching WooCommerce API: https://woocommerce-1488048-5826980.cloudwaysapps.com/wp-json/wc/v3/products/categories?consumer_key=ck_7f6d6fd81539e05b6feec56954ed88309642d695&consumer_secret=cs_c27dd09f9906b12d36e99c1caba693bf721805cb&per_page=100&orderby=name&order=asc
+   Generating static pages (3/7) 
+Fetching WooCommerce API: https://woocommerce-1488048-5826980.cloudwaysapps.com/wp-json/wc/v3/products?consumer_key=ck_7f6d6fd81539e05b6feec56954ed88309642d695&consumer_secret=cs_c27dd09f9906b12d36e99c1caba693bf721805cb&status=publish&per_page=12&page=1&category=653&orderby=date&order=desc
+   Generating static pages (5/7) 
+ ✓ Generating static pages (7/7)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                         Size  First Load JS  Revalidate  Expire
+┌ ○ /                            5.56 kB         128 kB         15m      1y
+├ ○ /_not-found                      0 B         122 kB         15m      1y
+├ ƒ /api/revalidate                  0 B            0 B
+├ ƒ /category/[slug]                 0 B         127 kB
+├ ƒ /product/[slug]              7.87 kB         130 kB
+└ ƒ /search                          0 B         127 kB
++ First Load JS shared by all     127 kB
+  ├ chunks/47291dc47c9c814b.js   24.1 kB
+  ├ chunks/a609cb334ebd4c8f.js   59.2 kB
+  ├ chunks/f7e239f9c6814d9d.js   17.1 kB
+  └ other shared chunks (total)  26.5 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
