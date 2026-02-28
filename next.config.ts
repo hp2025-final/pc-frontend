@@ -2,10 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'woocommerce-1488048-5826980.cloudwaysapps.com',
+        hostname: 'api.pcwalaonline.com',
         port: '',
         pathname: '/wp-content/uploads/**',
       },

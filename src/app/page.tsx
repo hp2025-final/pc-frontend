@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { woo } from '@/lib/woocommerce';
 import { formatPriceRange, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
 import CategoryIcon from '@/components/CategoryIcon';
@@ -189,13 +188,11 @@ export default async function HomePage() {
                         {inStock ? 'IN STOCK' : 'OUT OF STOCK'}
                       </span>
                       {product.images.length > 0 ? (
-                        <Image
+                        <img
                           src={product.images[0].src}
                           alt={product.images[0].alt || product.name}
-                          fill
-                          className="object-contain"
-                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                          style={{ padding: '16px' }}
+                          loading="lazy"
+                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '16px' }}
                         />
                       ) : (
                         <div style={{

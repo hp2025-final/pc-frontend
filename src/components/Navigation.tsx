@@ -275,12 +275,12 @@ export default function Navigation() {
 
         /* Mega menu trigger */
         .mega-menu-trigger {
-          position: static;
+          position: relative;
         }
         .mega-menu-content {
           display: none;
-          position: absolute;
-          top: 100%;
+          position: fixed;
+          top: 62px;
           left: 50%;
           transform: translateX(-50%);
           width: 900px;
@@ -305,6 +305,10 @@ export default function Navigation() {
           right: 0;
           height: 10px;
           background: transparent;
+          display: none;
+        }
+        .mega-menu-trigger:hover::after {
+          display: block;
         }
         
         .mega-section-title {

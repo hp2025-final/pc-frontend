@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import Script from "next/script";
 import { Press_Start_2P, Space_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import PixelProgressBar from "@/components/PixelProgressBar";
 
 const pressStart2P = Press_Start_2P({
   weight: "400",
@@ -85,9 +83,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','GTM-WXR3WTQ5');`,
           }}
         />
-        <Suspense fallback={null}>
-          <PixelProgressBar />
-        </Suspense>
         <Navigation />
         <main>{children}</main>
         <Footer />

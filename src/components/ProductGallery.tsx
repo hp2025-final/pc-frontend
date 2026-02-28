@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import Image from 'next/image';
+
 
 interface ProductImage {
     id: number;
@@ -108,14 +108,11 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
                             marginRight: idx === safeImages.length - 1 && !isSingleImage ? '6%' : '0',
                         }}
                     >
-                        <Image
+                        <img
                             src={img.src}
                             alt={img.alt || `${productName} image ${idx + 1}`}
-                            fill
-                            className="object-contain"
-                            priority={idx === 0}
-                            sizes="(max-width: 768px) 88vw, 45vw"
-                            style={{ padding: '16px' }}
+                            loading={idx === 0 ? 'eager' : 'lazy'}
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '16px' }}
                         />
                     </div>
                 ))}
