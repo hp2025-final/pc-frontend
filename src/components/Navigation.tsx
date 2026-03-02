@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 import { MAIN_CATEGORIES, MEGA_SECTIONS } from '@/lib/constants';
+import LiveSearch from '@/components/LiveSearch';
 
 function NavItem({ item, countMap, countsLoaded, isMobile, onClick }: { item: { name: string, slug: string }, countMap: Record<string, number>, countsLoaded: boolean, isMobile?: boolean, onClick?: () => void }) {
   // If counts aren't loaded yet, assume 1 (active) so default state is active links
@@ -145,30 +146,7 @@ export default function Navigation() {
 
         {/* Right Actions (Search + WhatsApp + Mobile Menu) */}
         <div className="right-actions-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <Link
-            href="/search"
-            className="search-btn"
-            style={{
-              fontFamily: 'var(--font-mono), monospace',
-              fontWeight: '700',
-              textTransform: 'uppercase',
-              color: '#000',
-              textDecoration: 'none',
-              border: '2px solid transparent',
-              transition: 'all 0.1s',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = '#000';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
-            }}
-          >
-            <span className="search-icon">⌕</span>
-            <span className="search-text">Search</span>
-          </Link>
+          <LiveSearch />
 
           <a
             href={`https://wa.me/923423355119`}
@@ -347,17 +325,6 @@ export default function Navigation() {
         /* Desktop Defaults */
         .desktop-categories { display: flex; }
         .mobile-menu-btn { display: none; }
-        
-        .search-btn {
-          font-size: 11px;
-          letter-spacing: 0.06em;
-          padding: 8px 14px;
-        }
-        .search-icon {
-          font-size: 14px;
-          margin-right: 4px;
-        }
-        .search-text { display: inline; }
 
         .whatsapp-btn {
           font-size: 10px;
@@ -421,14 +388,6 @@ export default function Navigation() {
           .right-actions-container {
             gap: 4px !important;
           }
-          
-          /* Search icon only on mobile */
-          .search-btn {
-            padding: 4px 6px !important;
-            border: 2px solid transparent !important;
-          }
-          .search-text { display: none; }
-          .search-icon { margin-right: 0; font-size: 18px; font-weight: bold; }
 
           /* WhatsApp text button on mobile */
           .whatsapp-btn {

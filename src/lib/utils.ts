@@ -124,3 +124,43 @@ export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength).trim() + "...";
 }
+
+// ─── SEO Utilities ───────────────────────────────────────────────
+
+/**
+ * Get numeric price range (low/high) for JSON-LD schema
+ * Uses the same ±15% formula as formatPriceRange but returns raw numbers
+ */
+export function getPriceRange(price: string | number): { low: number; high: number } | null {
+  const numPrice = typeof price === "string" ? parseFloat(price) : price;
+  if (isNaN(numPrice) || numPrice <= 0) return null;
+  return {
+    low: Math.round(numPrice * 0.85 / 50) * 50,
+    high: Math.round(numPrice * 1.15 / 50) * 50,
+  };
+}
+
+/**
+ * Get the lower price formatted for meta titles (e.g. "Rs. 120,700")
+ */
+export function getLowerPriceFormatted(price: string | number): string {
+  const range = getPriceRange(price);
+  if (!range) return "Price on request";
+  return `Rs. ${range.low.toLocaleString("en-PK")}`;
+}
+
+/**
+ * Map stock_status to schema.org availability URL
+ */
+export function getAvailabilitySchema(stockStatus: string): string {
+  switch (stockStatus) {
+    case "instock":
+      return "https://schema.org/InStock";
+    case "outofstock":
+      return "https://schema.org/OutOfStock";
+    case "onbackorder":
+      return "https://schema.org/BackOrder";
+    default:
+      return "https://schema.org/InStock";
+  }
+}

@@ -87,30 +87,32 @@ class WooCommerceClient {
     }
   }
 
-  private async request<T>(
+  private buildUrl(
     endpoint: string,
-    params: Record<string, string | number | boolean> = {},
-    cacheTtl: number = 900
-  ): Promise<T> {
+    params: Record<string, string | number | boolean> = {}
+  ): URL {
     const url = new URL(`/wp-json/wc/v3/${endpoint}`, this.baseUrl);
-
-    // Add auth params
     url.searchParams.set('consumer_key', this.consumerKey);
     url.searchParams.set('consumer_secret', this.consumerSecret);
-
-    // Add query params
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         url.searchParams.set(key, String(value));
       }
     });
+    return url;
+  }
+
+  private async request<T>(
+    endpoint: string,
+    params: Record<string, string | number | boolean> = {},
+    cacheTtl: number = 900
+  ): Promise<T> {
+    const url = this.buildUrl(endpoint, params);
 
     try {
       const response = await fetch(url.toString(), {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         next: { revalidate: cacheTtl },
       });
 
@@ -121,6 +123,41 @@ class WooCommerceClient {
       }
 
       return response.json();
+    } catch (error) {
+      console.error('WooCommerce API request failed for URL:', url.pathname);
+      console.error('Error details:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Like request(), but also returns x-wp-total and x-wp-totalpages headers
+   */
+  private async requestWithMeta<T>(
+    endpoint: string,
+    params: Record<string, string | number | boolean> = {},
+    cacheTtl: number = 900
+  ): Promise<{ data: T; total: number; totalPages: number }> {
+    const url = this.buildUrl(endpoint, params);
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        next: { revalidate: cacheTtl },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('WooCommerce API error response:', errorText);
+        throw new Error(`WooCommerce API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json() as T;
+      const total = parseInt(response.headers.get('x-wp-total') || '0');
+      const totalPages = parseInt(response.headers.get('x-wp-totalpages') || '1');
+
+      return { data, total, totalPages };
     } catch (error) {
       console.error('WooCommerce API request failed for URL:', url.pathname);
       console.error('Error details:', error);
@@ -158,6 +195,35 @@ class WooCommerceClient {
     }
 
     return this.request<WooProduct[]>('products', queryParams, 1800);
+  }
+
+  /**
+   * Get products with pagination metadata (total, totalPages)
+   */
+  async getProductsWithMeta(params: WooSearchParams = {}): Promise<{
+    products: WooProduct[];
+    total: number;
+    totalPages: number;
+  }> {
+    const queryParams: Record<string, string | number> = {
+      status: 'publish',
+      per_page: params.per_page || 20,
+      page: params.page || 1,
+      _fields: LISTING_FIELDS,
+    };
+
+    if (params.search) queryParams.search = params.search;
+    if (params.category) queryParams.category = params.category;
+    if (params.min_price) queryParams.min_price = params.min_price;
+    if (params.max_price) queryParams.max_price = params.max_price;
+
+    if (params.orderby) {
+      queryParams.orderby = params.orderby === 'relevance' ? 'relevance' : params.orderby;
+      queryParams.order = params.order || 'desc';
+    }
+
+    const { data, total, totalPages } = await this.requestWithMeta<WooProduct[]>('products', queryParams, 1800);
+    return { products: data, total, totalPages };
   }
 
   /**
@@ -241,6 +307,7 @@ export function getWooClient(): WooCommerceClient {
 // Convenience exports
 export const woo = {
   getProducts: (params?: WooSearchParams) => getWooClient().getProducts(params),
+  getProductsWithMeta: (params?: WooSearchParams) => getWooClient().getProductsWithMeta(params),
   getProductBySlug: (slug: string) => getWooClient().getProductBySlug(slug),
   getProductById: (id: number) => getWooClient().getProductById(id),
   getCategories: (params?: { parent?: number; per_page?: number }) => getWooClient().getCategories(params),

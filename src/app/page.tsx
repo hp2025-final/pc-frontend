@@ -20,8 +20,51 @@ export default async function HomePage() {
     catCountMap[c.slug] = c.count;
   }
 
+  // ─── Organization JSON-LD ──────────────────────────────────
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'PC Wala Online',
+    url: 'https://www.pcwalaonline.com',
+    logo: 'https://www.pcwalaonline.com/favicon.ico',
+    description: "Pakistan's #1 PC parts store. Shop GPUs, CPUs, Motherboards, Gaming Laptops & more at competitive prices.",
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: '+923423355119',
+      contactType: 'sales',
+      areaServed: 'PK',
+      availableLanguage: ['English', 'Urdu'],
+    },
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'PK',
+    },
+  };
+
+  // ─── WebSite JSON-LD with SearchAction ─────────────────────
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'PC Wala Online',
+    url: 'https://www.pcwalaonline.com',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://www.pcwalaonline.com/search?q={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
+      {/* JSON-LD Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
 
       {/* ──────────── HERO ──────────── */}
       <section className="scanline-bg" style={{

@@ -4,11 +4,17 @@ import Link from 'next/link';
 import { woo } from '@/lib/woocommerce';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import ProductGallery from '@/components/ProductGallery';
-import { formatPriceRange, getEffectivePrice, getBrandName, getProductCondition, getWarrantyPeriod, getWarrantyType } from '@/lib/utils';
+import {
+  formatPriceRange, getEffectivePrice, getBrandName,
+  getProductCondition, getWarrantyPeriod, getWarrantyType,
+  getLowerPriceFormatted, getPriceRange, getAvailabilitySchema, stripHtml,
+} from '@/lib/utils';
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.pcwalaonline.com';
 
 // ISR: revalidate every 30 minutes
 export const revalidate = 1800;
@@ -21,15 +27,48 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     return { title: 'Product Not Found' };
   }
 
-  const priceRange = formatPriceRange(getEffectivePrice(product));
+  const effectivePrice = getEffectivePrice(product);
+  const lowerPrice = getLowerPriceFormatted(effectivePrice);
+  const brand = getBrandName(product);
+  const inStock = product.stock_status === 'instock';
+  const canonicalUrl = `${SITE_URL}/product/${slug}`;
+
+  // SEO-optimized title: "Product Name — Rs. X Price in Pakistan | PC Wala Online"
+  const title = `${product.name} — ${lowerPrice} Price in Pakistan | PC Wala Online`;
+
+  // Rich meta description with brand, price, stock, and call-to-action
+  const descParts = [
+    `Buy ${product.name}`,
+    brand ? `by ${brand}` : '',
+    `starting from ${lowerPrice} in Pakistan.`,
+    inStock ? 'In Stock.' : 'Currently out of stock.',
+    'Order via WhatsApp for fast delivery. Genuine parts, competitive prices — PC Wala Online.',
+  ].filter(Boolean);
+  const description = descParts.join(' ');
 
   return {
-    title: `${product.name} — PC Wala Online`,
-    description: `${product.name} | ${priceRange} | Order via WhatsApp`,
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
-      title: product.name,
-      description: `${product.name} | ${priceRange}`,
-      images: product.images.length > 0 ? [product.images[0].src] : [],
+      title: `${product.name} — ${lowerPrice} in Pakistan`,
+      description,
+      url: canonicalUrl,
+      siteName: 'PC Wala Online',
+      type: 'website',
+      images: product.images.length > 0
+        ? product.images.map(img => ({
+          url: img.src,
+          alt: `${product.name} - Buy in Pakistan at PC Wala Online`,
+        }))
+        : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.name} — ${lowerPrice}`,
+      description,
     },
   };
 }
@@ -49,9 +88,82 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const condition = getProductCondition(product);
   const warranty = getWarrantyPeriod(product);
   const warrantyType = getWarrantyType(product);
+  const priceValues = getPriceRange(effectivePrice);
+  const canonicalUrl = `${SITE_URL}/product/${slug}`;
+
+  // ─── Product JSON-LD (Schema.org) ───────────────────────────
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: product.images.map(img => img.src),
+    description: product.short_description
+      ? stripHtml(product.short_description)
+      : product.description
+        ? stripHtml(product.description).substring(0, 300)
+        : `${product.name} available at PC Wala Online Pakistan`,
+    url: canonicalUrl,
+    ...(brand && { brand: { '@type': 'Brand', name: brand } }),
+    ...(product.sku && { sku: product.sku }),
+    ...(product.categories.length > 0 && { category: product.categories[0].name }),
+    offers: priceValues
+      ? {
+        '@type': 'AggregateOffer',
+        lowPrice: priceValues.low,
+        highPrice: priceValues.high,
+        priceCurrency: 'PKR',
+        availability: getAvailabilitySchema(product.stock_status),
+        seller: { '@type': 'Organization', name: 'PC Wala Online' },
+        url: canonicalUrl,
+      }
+      : {
+        '@type': 'Offer',
+        priceCurrency: 'PKR',
+        availability: getAvailabilitySchema(product.stock_status),
+        seller: { '@type': 'Organization', name: 'PC Wala Online' },
+        url: canonicalUrl,
+      },
+  };
+
+  // ─── BreadcrumbList JSON-LD ─────────────────────────────────
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: SITE_URL,
+      },
+      ...(product.categories.length > 0
+        ? [{
+          '@type': 'ListItem',
+          position: 2,
+          name: product.categories[0].name,
+          item: `${SITE_URL}/category/${product.categories[0].slug}`,
+        }]
+        : []),
+      {
+        '@type': 'ListItem',
+        position: product.categories.length > 0 ? 3 : 2,
+        name: product.name,
+        item: canonicalUrl,
+      },
+    ],
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
+      {/* JSON-LD Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="container-retro" style={{ paddingTop: '24px', paddingBottom: '64px' }}>
 
         {/* Breadcrumb */}

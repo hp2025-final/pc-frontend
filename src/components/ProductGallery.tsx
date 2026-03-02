@@ -110,8 +110,11 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
                     >
                         <img
                             src={img.src}
-                            alt={img.alt || `${productName} image ${idx + 1}`}
+                            alt={idx === 0
+                                ? `${productName} - Buy in Pakistan at PC Wala Online`
+                                : `${productName} - Image ${idx + 1} | PC Wala Online`}
                             loading={idx === 0 ? 'eager' : 'lazy'}
+                            fetchPriority={idx === 0 ? 'high' : undefined}
                             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '16px' }}
                         />
                     </div>

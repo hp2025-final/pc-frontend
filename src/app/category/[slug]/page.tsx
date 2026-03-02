@@ -1,14 +1,24 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { woo } from '@/lib/woocommerce';
 import { formatPriceRange, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
 import CategoryIcon from '@/components/CategoryIcon';
+import CategoryFilters from '@/components/CategoryFilters';
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    sort?: string;
+    brand?: string;
+    min_price?: string;
+    max_price?: string;
+  }>;
 }
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.pcwalaonline.com';
 
 // ISR: revalidate every 60 minutes
 export const revalidate = 3600;
@@ -21,34 +31,166 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     return { title: 'Category Not Found' };
   }
 
+  const canonicalUrl = `${SITE_URL}/category/${slug}`;
+  const title = `${category.name} — Buy in Pakistan | PC Wala Online`;
+  const description = category.description
+    || `Shop ${category.name} at PC Wala Online Pakistan. ${category.count} products available at competitive prices in PKR. Order via WhatsApp for fast delivery.`;
+
   return {
-    title: `${category.name} — PC Wala Online`,
-    description: category.description || `Shop ${category.name} at PC Wala Online. Competitive prices, WhatsApp ordering.`,
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: 'PC Wala Online',
+      type: 'website',
+    },
   };
+}
+
+// Parse sort param into orderby/order for WC API
+function parseSortParam(sort: string | undefined): { orderby: 'date' | 'price'; order: 'asc' | 'desc' } {
+  switch (sort) {
+    case 'date_asc': return { orderby: 'date', order: 'asc' };
+    case 'price_desc': return { orderby: 'price', order: 'desc' };
+    case 'price_asc': return { orderby: 'price', order: 'asc' };
+    default: return { orderby: 'date', order: 'desc' };
+  }
+}
+
+// Generate pagination page numbers
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: (number | '...')[] = [1];
+
+  if (current > 3) {
+    pages.push('...');
+  }
+
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (current < total - 2) {
+    pages.push('...');
+  }
+
+  pages.push(total);
+
+  return pages;
 }
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   const { slug } = await params;
-  const { page: pageParam } = await searchParams;
-  const page = parseInt(pageParam || '1');
+  const sp = await searchParams;
+  const page = parseInt(sp.page || '1');
   const perPage = 40;
 
-  // Fetch category first, then use its ID directly to avoid double-fetch
-  const category = await woo.getCategoryBySlug(slug);
+  // Parse sort/filter params
+  const { orderby, order } = parseSortParam(sp.sort);
+  const brandFilter = sp.brand || '';
+  const minPrice = sp.min_price || '';
+  const maxPrice = sp.max_price || '';
 
+  // Fetch category
+  const category = await woo.getCategoryBySlug(slug);
   if (!category) {
     notFound();
   }
 
-  const products = await woo.getProductsByCategory(slug, {
+  // Fetch products with metadata (total, totalPages)
+  const { products, totalPages } = await woo.getProductsWithMeta({
     page,
     per_page: perPage,
-    orderby: 'date',
-    order: 'desc',
-  }, category.id);
+    orderby: orderby as 'date' | 'price',
+    order,
+    category: category.id.toString(),
+    min_price: minPrice ? parseFloat(minPrice) : undefined,
+    max_price: maxPrice ? parseFloat(maxPrice) : undefined,
+  });
+
+  // Filter by brand client-side (WC doesn't have native brand filter in basic API)
+  const filteredProducts = brandFilter
+    ? products.filter((p) => {
+      const pBrand = getBrandName(p);
+      return pBrand.toLowerCase() === brandFilter.toLowerCase();
+    })
+    : products;
+
+  // Extract unique brands from current page products for filter options
+  const allBrands = [...new Set(products.map((p) => getBrandName(p)).filter(Boolean))].sort();
+
+  // Build base URL for pagination links (preserving filters)
+  const buildPageUrl = (pageNum: number) => {
+    const params = new URLSearchParams();
+    if (pageNum > 1) params.set('page', pageNum.toString());
+    if (sp.sort) params.set('sort', sp.sort);
+    if (brandFilter) params.set('brand', brandFilter);
+    if (minPrice) params.set('min_price', minPrice);
+    if (maxPrice) params.set('max_price', maxPrice);
+    const qs = params.toString();
+    return `/category/${slug}${qs ? `?${qs}` : ''}`;
+  };
+
+  const pageNumbers = getPageNumbers(page, totalPages);
+  const canonicalUrl = `${SITE_URL}/category/${slug}`;
+
+  // ─── BreadcrumbList JSON-LD ─────────────────────────────────
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: SITE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: category.name,
+        item: canonicalUrl,
+      },
+    ],
+  };
+
+  // ─── ItemList JSON-LD (product listing) ─────────────────────
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: category.name,
+    url: canonicalUrl,
+    numberOfItems: filteredProducts.length,
+    itemListElement: filteredProducts.map((product, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      url: `${SITE_URL}/product/${product.slug}`,
+      name: product.name,
+    })),
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
+      {/* JSON-LD Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
 
       {/* Category Header */}
       <div style={{
@@ -93,9 +235,20 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         </div>
       </div>
 
-      <div className="container-retro" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+      <div className="container-retro" style={{ paddingTop: '24px', paddingBottom: '64px' }}>
 
-        {products.length > 0 ? (
+        {/* Filters & Sort */}
+        <Suspense fallback={null}>
+          <CategoryFilters
+            brands={allBrands}
+            currentSort={sp.sort || 'date_desc'}
+            currentBrand={brandFilter}
+            currentMinPrice={minPrice}
+            currentMaxPrice={maxPrice}
+          />
+        </Suspense>
+
+        {filteredProducts.length > 0 ? (
           <>
             {/* Products Grid */}
             <div style={{
@@ -103,7 +256,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
               gap: '8px',
               marginBottom: '32px',
             }} className="cat-products-grid">
-              {products.map((product) => {
+              {filteredProducts.map((product) => {
                 const effectivePrice = getEffectivePrice(product);
                 const priceRange = formatPriceRange(effectivePrice);
                 const inStock = product.stock_status === 'instock';
@@ -171,24 +324,53 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
               })}
             </div>
 
-            {/* Pagination */}
-            {products.length === perPage && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            {/* Numbered Pagination */}
+            {totalPages > 1 && (
+              <nav aria-label="Pagination" style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '4px',
+                flexWrap: 'wrap',
+              }}>
+                {/* Previous */}
                 {page > 1 && (
                   <Link
-                    href={`/category/${slug}?page=${page - 1}`}
-                    className="pixel-btn pixel-btn-outline"
+                    href={buildPageUrl(page - 1)}
+                    className="pg-btn"
+                    aria-label="Previous page"
                   >
-                    ← PREV PAGE
+                    ‹
                   </Link>
                 )}
-                <Link
-                  href={`/category/${slug}?page=${page + 1}`}
-                  className="pixel-btn"
-                >
-                  NEXT PAGE →
-                </Link>
-              </div>
+
+                {/* Page Numbers */}
+                {pageNumbers.map((pn, idx) =>
+                  pn === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="pg-ellipsis">…</span>
+                  ) : (
+                    <Link
+                      key={pn}
+                      href={buildPageUrl(pn)}
+                      className={`pg-btn ${pn === page ? 'pg-current' : ''}`}
+                      aria-current={pn === page ? 'page' : undefined}
+                    >
+                      {pn}
+                    </Link>
+                  )
+                )}
+
+                {/* Next */}
+                {page < totalPages && (
+                  <Link
+                    href={buildPageUrl(page + 1)}
+                    className="pg-btn"
+                    aria-label="Next page"
+                  >
+                    ›
+                  </Link>
+                )}
+              </nav>
             )}
 
             <style>{`
@@ -196,6 +378,56 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             @media (min-width: 600px)  { .cat-products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
             @media (min-width: 900px)  { .cat-products-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
             @media (min-width: 1200px) { .cat-products-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+            /* Pagination Styles */
+            .pg-btn {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              min-width: 36px;
+              height: 36px;
+              padding: 0 10px;
+              border: 2px solid #000;
+              background: #fff;
+              color: #000;
+              font-family: var(--font-mono), monospace;
+              font-size: 12px;
+              font-weight: 700;
+              text-decoration: none;
+              transition: all 0.1s;
+              cursor: pointer;
+            }
+            .pg-btn:hover {
+              background: #000;
+              color: #fff;
+              transform: translate(-1px, -1px);
+              box-shadow: 2px 2px 0px #000;
+            }
+            .pg-current {
+              background: #000 !important;
+              color: #fff !important;
+              cursor: default;
+              box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+            }
+            .pg-ellipsis {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              min-width: 28px;
+              height: 36px;
+              font-family: var(--font-mono), monospace;
+              font-size: 14px;
+              color: #888;
+              user-select: none;
+            }
+            @media (max-width: 480px) {
+              .pg-btn {
+                min-width: 32px;
+                height: 32px;
+                font-size: 11px;
+                padding: 0 6px;
+              }
+            }
           `}</style>
           </>
         ) : (
@@ -213,7 +445,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
               marginBottom: '12px',
               color: '#000',
             }}>
-              COMING SOON
+              {brandFilter || minPrice ? 'NO MATCHING PRODUCTS' : 'COMING SOON'}
             </h2>
             <p style={{
               fontFamily: 'var(--font-mono), monospace',
@@ -221,14 +453,22 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
               color: '#888',
               marginBottom: '24px',
             }}>
-              No products in this category yet. We&apos;re stocking up!
+              {brandFilter || minPrice
+                ? 'Try adjusting your filters to find what you\'re looking for.'
+                : 'No products in this category yet. We\'re stocking up!'}
             </p>
-            <Link href="/" className="pixel-btn">
-              ← BACK TO HOME
-            </Link>
+            {(brandFilter || minPrice) ? (
+              <Link href={`/category/${slug}`} className="pixel-btn">
+                ✕ CLEAR FILTERS
+              </Link>
+            ) : (
+              <Link href="/" className="pixel-btn">
+                ← BACK TO HOME
+              </Link>
+            )}
           </div>
         )}
       </div>
-    </div >
+    </div>
   );
 }
