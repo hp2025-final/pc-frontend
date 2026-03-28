@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { woo } from '@/lib/woocommerce';
-import { formatPriceRange, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
+import { formatPrice, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
 import CategoryIcon from '@/components/CategoryIcon';
 import AnimatedText from '@/components/AnimatedText';
 import { ALL_HOME_CATEGORIES } from '@/lib/constants';
@@ -205,7 +205,7 @@ export default async function HomePage() {
             }} className="products-grid">
               {latestProducts.map((product) => {
                 const effectivePrice = getEffectivePrice(product);
-                const priceRange = formatPriceRange(effectivePrice);
+                const price = formatPrice(effectivePrice);
                 const inStock = product.stock_status === 'instock';
                 const brand = getBrandName(product);
                 const warranty = getWarrantyPeriod(product);
@@ -264,7 +264,7 @@ export default async function HomePage() {
                         </span>
                       )}
 
-                      <div className="price-range price-range-sm">{priceRange}</div>
+                      <div className="price-range price-range-sm">{price}</div>
                     </div>
                   </Link>
                 );
@@ -301,7 +301,7 @@ export default async function HomePage() {
             {[
               { icon: '✓', title: 'Genuine Parts', desc: 'Only authentic, verified components. No counterfeits.' },
               { icon: '▶', title: 'WhatsApp Order', desc: 'Fast ordering via WhatsApp. Real humans reply fast.' },
-              { icon: '⚡', title: 'Competitive Price', desc: 'Best market rates. Price range shown upfront.' },
+              { icon: '⚡', title: 'Competitive Price', desc: 'Best market rates. Price shown upfront.' },
             ].map((item) => (
               <div key={item.title} className="pixel-box" style={{ padding: '24px' }}>
                 <div style={{

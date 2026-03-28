@@ -1,7 +1,7 @@
 'use client';
 
 import { WooProduct } from '@/lib/woocommerce';
-import { formatPriceRange, getEffectivePrice } from '@/lib/utils';
+import { formatPrice, getEffectivePrice } from '@/lib/utils';
 
 const WA_NUMBER = '923423355119';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.pcwalaonline.com';
@@ -12,9 +12,9 @@ interface WhatsAppButtonProps {
 }
 
 function buildWhatsAppMessage(product: WooProduct): string {
-  const priceRange = formatPriceRange(getEffectivePrice(product));
+  const price = formatPrice(getEffectivePrice(product));
   const url = `${SITE_URL}/product/${product.slug}`;
-  const msg = `Hi! I'm interested in:\n*${product.name}*\nPrice Range: ${priceRange}\n${url}\n\nPlease confirm availability and final price.`;
+  const msg = `Hi! I'm interested in:\n*${product.name}*\nPrice: ${price}\n${url}\n\nPlease confirm availability and final price.`;
   return encodeURIComponent(msg);
 }
 

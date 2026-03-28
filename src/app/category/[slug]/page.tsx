@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { woo } from '@/lib/woocommerce';
-import { formatPriceRange, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
+import { formatPrice, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
 import CategoryIcon from '@/components/CategoryIcon';
 import CategoryFilters from '@/components/CategoryFilters';
 
@@ -258,7 +258,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             }} className="cat-products-grid">
               {filteredProducts.map((product) => {
                 const effectivePrice = getEffectivePrice(product);
-                const priceRange = formatPriceRange(effectivePrice);
+                const price = formatPrice(effectivePrice);
                 const inStock = product.stock_status === 'instock';
                 const brand = getBrandName(product);
                 const warranty = getWarrantyPeriod(product);
@@ -317,7 +317,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                         </span>
                       )}
 
-                      <div className="price-range price-range-sm">{priceRange}</div>
+                      <div className="price-range price-range-sm">{price}</div>
                     </div>
                   </Link>
                 );

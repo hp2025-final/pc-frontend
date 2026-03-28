@@ -5,9 +5,9 @@ import { woo } from '@/lib/woocommerce';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import ProductGallery from '@/components/ProductGallery';
 import {
-  formatPriceRange, getEffectivePrice, getBrandName,
+  formatPrice, getEffectivePrice, getBrandName,
   getProductCondition, getWarrantyPeriod, getWarrantyType,
-  getLowerPriceFormatted, getPriceRange, getAvailabilitySchema, stripHtml,
+  getAvailabilitySchema, stripHtml,
 } from '@/lib/utils';
 
 interface ProductPageProps {
@@ -28,19 +28,19 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   const effectivePrice = getEffectivePrice(product);
-  const lowerPrice = getLowerPriceFormatted(effectivePrice);
+  const priceDisplay = formatPrice(effectivePrice);
   const brand = getBrandName(product);
   const inStock = product.stock_status === 'instock';
   const canonicalUrl = `${SITE_URL}/product/${slug}`;
 
   // SEO-optimized title: "Product Name — Rs. X Price in Pakistan | PC Wala Online"
-  const title = `${product.name} — ${lowerPrice} Price in Pakistan | PC Wala Online`;
+  const title = `${product.name} — ${priceDisplay} Price in Pakistan | PC Wala Online`;
 
   // Rich meta description with brand, price, stock, and call-to-action
   const descParts = [
     `Buy ${product.name}`,
     brand ? `by ${brand}` : '',
-    `starting from ${lowerPrice} in Pakistan.`,
+    `for ${priceDisplay} in Pakistan.`,
     inStock ? 'In Stock.' : 'Currently out of stock.',
     'Order via WhatsApp for fast delivery. Genuine parts, competitive prices — PC Wala Online.',
   ].filter(Boolean);
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${product.name} — ${lowerPrice} in Pakistan`,
+      title: `${product.name} — ${priceDisplay} in Pakistan`,
       description,
       url: canonicalUrl,
       siteName: 'PC Wala Online',
@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${product.name} — ${lowerPrice}`,
+      title: `${product.name} — ${priceDisplay}`,
       description,
     },
   };
@@ -82,13 +82,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const effectivePrice = getEffectivePrice(product);
-  const priceRange = formatPriceRange(effectivePrice);
+  const priceText = formatPrice(effectivePrice);
   const inStock = product.stock_status === 'instock';
   const brand = getBrandName(product);
   const condition = getProductCondition(product);
   const warranty = getWarrantyPeriod(product);
   const warrantyType = getWarrantyType(product);
-  const priceValues = getPriceRange(effectivePrice);
+  const numericPrice = typeof effectivePrice === "string" ? parseFloat(effectivePrice) : effectivePrice;
   const canonicalUrl = `${SITE_URL}/product/${slug}`;
 
   // ─── Product JSON-LD (Schema.org) ───────────────────────────
@@ -106,11 +106,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ...(brand && { brand: { '@type': 'Brand', name: brand } }),
     ...(product.sku && { sku: product.sku }),
     ...(product.categories.length > 0 && { category: product.categories[0].name }),
-    offers: priceValues
+    offers: !isNaN(numericPrice) && numericPrice > 0
       ? {
-        '@type': 'AggregateOffer',
-        lowPrice: priceValues.low,
-        highPrice: priceValues.high,
+        '@type': 'Offer',
+        price: numericPrice,
         priceCurrency: 'PKR',
         availability: getAvailabilitySchema(product.stock_status),
         seller: { '@type': 'Organization', name: 'PC Wala Online' },
@@ -220,7 +219,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               {product.name}
             </h1>
 
-            {/* Price Range — hero element */}
+            {/* Price — hero element */}
             <div style={{
               border: '2px solid #000',
               padding: '16px',
@@ -235,7 +234,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 letterSpacing: '0.08em',
                 marginBottom: '6px',
               }}>
-                Price Range
+                Price
               </div>
               <div style={{
                 fontFamily: 'var(--font-pixel), monospace',
@@ -244,7 +243,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 letterSpacing: '-0.01em',
                 lineHeight: 1.5,
               }}>
-                {priceRange}
+                {priceText}
               </div>
               <div style={{
                 fontFamily: 'var(--font-mono), monospace',

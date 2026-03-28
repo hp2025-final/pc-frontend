@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { woo } from '@/lib/woocommerce';
-import { formatPriceRange, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
+import { formatPrice, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
 import CategoryIcon from '@/components/CategoryIcon';
 
 interface SearchPageProps {
@@ -117,7 +117,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         }} className="search-products-grid">
                             {products.map((product) => {
                                 const effectivePrice = getEffectivePrice(product);
-                                const priceRange = formatPriceRange(effectivePrice);
+                                const price = formatPrice(effectivePrice);
                                 const inStock = product.stock_status === 'instock';
                                 const brand = getBrandName(product);
                                 const warranty = getWarrantyPeriod(product);
@@ -176,7 +176,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                                                 </span>
                                             )}
 
-                                            <div className="price-range price-range-sm">{priceRange}</div>
+                                            <div className="price-range price-range-sm">{price}</div>
                                         </div>
                                     </Link>
                                 );
