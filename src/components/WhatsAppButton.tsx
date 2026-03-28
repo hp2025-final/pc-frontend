@@ -23,7 +23,20 @@ export default function WhatsAppButton({ product, variant = 'full' }: WhatsAppBu
   const href = `https://wa.me/${WA_NUMBER}?text=${msg}`;
 
   const handleClick = () => {
-    // Could add analytics here: whatsapp_click event
+    const effectivePrice = getEffectivePrice(product);
+    const numericPrice = typeof effectivePrice === "string" ? parseFloat(effectivePrice) : effectivePrice;
+
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'InitiateCheckout', {
+        content_name: product.name,
+        content_category: product.categories && product.categories.length > 0 ? product.categories[0].name : 'Uncategorized',
+        content_ids: [product.sku || product.slug],
+        contents: [{ id: product.sku || product.slug, quantity: 1 }],
+        currency: 'PKR',
+        value: !isNaN(numericPrice) ? numericPrice : 0,
+      });
+    }
+
     window.open(href, '_blank', 'noopener,noreferrer');
   };
 

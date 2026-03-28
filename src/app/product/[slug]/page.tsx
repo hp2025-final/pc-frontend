@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { woo } from '@/lib/woocommerce';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import ProductGallery from '@/components/ProductGallery';
+import TrackViewContent from '@/components/analytics/TrackViewContent';
 import {
   formatPrice, getEffectivePrice, getBrandName,
   getProductCondition, getWarrantyPeriod, getWarrantyType,
@@ -152,8 +153,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ],
   };
 
+  const viewContentData = {
+    content_name: product.name,
+    content_category: product.categories.length > 0 ? product.categories[0].name : 'Uncategorized',
+    content_ids: [product.sku || product.slug],
+    content_type: 'product',
+    value: !isNaN(numericPrice) ? numericPrice : 0,
+    currency: 'PKR',
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
+      <TrackViewContent data={viewContentData} />
       {/* JSON-LD Structured Data for SEO */}
       <script
         type="application/ld+json"
