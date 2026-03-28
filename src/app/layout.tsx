@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+import { Suspense } from "react";
 import { Press_Start_2P, Space_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
@@ -64,7 +64,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${pressStart2P.variable} ${spaceMono.variable}`}>
       <body className="antialiased bg-white text-black">
-        <MetaPixel />
+        <Suspense fallback={null}>
+          <MetaPixel />
+        </Suspense>
         <Navigation />
         <main>{children}</main>
         <Footer />
