@@ -79,7 +79,7 @@ export default function Footer() {
                 letterSpacing: '0.1em',
                 marginBottom: '8px',
               }}>
-                // VISIT OUR STORE
+                {"// VISIT OUR STORE"}
               </div>
               <p style={{
                 fontFamily: 'var(--font-mono), monospace',
