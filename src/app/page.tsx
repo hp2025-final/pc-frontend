@@ -9,9 +9,10 @@ import { ALL_HOME_CATEGORIES } from '@/lib/constants';
 export const revalidate = 7200;
 
 export default async function HomePage() {
-  const [wooCategories, latestProducts] = await Promise.all([
+  const [wooCategories, latestProducts, usedLaptops] = await Promise.all([
     woo.getCategories({ per_page: 100 }),
     woo.getProductsByCategory('latest-arrival', { per_page: 12, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('laptops', { per_page: 10, orderby: 'date', order: 'desc' }),
   ]);
 
   // Map WooCommerce category counts by slug
@@ -279,23 +280,14 @@ export default async function HomePage() {
           <h2 className="section-title">{"// Why Choose Us"}</h2>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(1, 1fr)',
             gap: '12px',
           }} className="why-grid">
             {[
-              { icon: '✓', title: 'Genuine Parts', desc: 'Only authentic, verified components. No counterfeits.' },
-              { icon: '▶', title: 'WhatsApp Order', desc: 'Fast ordering via WhatsApp. Real humans reply fast.' },
-              { icon: '⚡', title: 'Competitive Price', desc: 'Best market rates. Price shown upfront.' },
+              { title: 'Genuine Parts', desc: 'Only authentic, verified components. No counterfeits.' },
+              { title: 'WhatsApp Order', desc: 'Fast ordering via WhatsApp. Real humans reply fast.' },
+              { title: 'Competitive Price', desc: 'Best market rates. Price shown upfront.' },
             ].map((item) => (
               <div key={item.title} className="pixel-box" style={{ padding: '24px' }}>
-                <div style={{
-                  fontFamily: 'var(--font-pixel), monospace',
-                  fontSize: '20px',
-                  marginBottom: '12px',
-                  color: '#000',
-                }}>
-                  {item.icon}
-                </div>
                 <h3 style={{
                   fontFamily: 'var(--font-pixel), monospace',
                   fontSize: '10px',
@@ -319,6 +311,118 @@ export default async function HomePage() {
           </div>
           <style>{`
             @media (min-width: 600px) { .why-grid { grid-template-columns: repeat(3, 1fr); } }
+          `}</style>
+        </section>
+
+        {/* ──────────── USED LAPTOPS ──────────── */}
+        <section id="used-laptops" style={{ marginTop: '64px', marginBottom: '64px', scrollMarginTop: '80px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+            <h2 className="section-title" style={{ marginBottom: 0, borderBottom: 'none' }}>{"// Used Laptops"}</h2>
+            <Link
+              href="/category/laptops"
+              style={{
+                fontFamily: 'var(--font-pixel), monospace',
+                fontSize: '9px',
+                color: '#000',
+                textDecoration: 'underline',
+                textUnderlineOffset: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
+            >
+              VIEW ALL →
+            </Link>
+          </div>
+
+          {usedLaptops.length > 0 ? (
+            <div style={{
+              display: 'grid',
+              gap: '8px',
+            }} className="products-grid laptops-grid">
+              {usedLaptops.map((product) => {
+                const effectivePrice = getEffectivePrice(product);
+                const price = formatPrice(effectivePrice);
+                const inStock = product.stock_status === 'instock';
+                const brand = getBrandName(product);
+                const warranty = getWarrantyPeriod(product);
+
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/product/${product.slug}`}
+                    className="product-card"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    {/* Image */}
+                    <div className="product-card-image">
+                      <span className={`pixel-tag ${inStock ? '' : 'pixel-tag-gray'}`} style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        zIndex: 10,
+                        fontSize: '9px',
+                        padding: '4px 6px',
+                        boxShadow: 'none'
+                      }}>
+                        {inStock ? 'IN STOCK' : 'OUT OF STOCK'}
+                      </span>
+                      {product.images.length > 0 ? (
+                        <img
+                          src={product.images[0].src}
+                          alt={product.images[0].alt || product.name}
+                          loading="lazy"
+                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '16px' }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '100%', height: '100%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: '#f0f0f0',
+                        }}>
+                          <CategoryIcon slug={product.categories[0]?.slug || ''} size={40} color="#ccc" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="product-card-body">
+                      <h3 className="product-card-title">{product.name}</h3>
+
+                      {(brand || warranty) && (
+                        <span style={{
+                          fontFamily: 'var(--font-mono), monospace',
+                          fontSize: '10px',
+                          color: '#888',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                        }}>
+                          {[brand, warranty].filter(Boolean).join(' | ')}
+                        </span>
+                      )}
+
+                      <div className="price-range price-range-sm">{price}</div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{
+              border: '2px solid #000',
+              padding: '48px 24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ fontFamily: 'var(--font-pixel), monospace', fontSize: '11px', color: '#888' }}>
+                No laptops yet. Check back soon.
+              </p>
+            </div>
+          )}
+
+          <style>{`
+            .laptops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            @media (min-width: 600px)  { .laptops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+            @media (min-width: 768px)  { .laptops-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+            @media (min-width: 1024px) { .laptops-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
           `}</style>
         </section>
 
