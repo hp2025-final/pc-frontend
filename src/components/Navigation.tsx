@@ -12,12 +12,7 @@ function NavItem({ item, countMap, countsLoaded, isMobile, onClick }: { item: { 
   const isLive = count > 0;
 
   if (!isLive) {
-    return (
-      <div className={isMobile ? "mobile-nav-item disabled" : "nav-item disabled"}>
-        {item.name}
-        <span className="pixel-tag pixel-tag-gray" style={{ fontSize: '8px', padding: '2px 4px', marginLeft: '6px', boxShadow: 'none' }}>SOON</span>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -37,12 +32,7 @@ function MegaItem({ item, countMap, countsLoaded }: { item: { name: string, slug
   const isLive = count > 0;
 
   if (!isLive) {
-    return (
-      <div className="mega-item disabled" style={{ display: 'flex', alignItems: 'center' }}>
-        {item.name}
-        <span className="pixel-tag pixel-tag-gray" style={{ fontSize: '8px', padding: '2px 4px', marginLeft: '6px', boxShadow: 'none' }}>SOON</span>
-      </div>
-    );
+    return null;
   }
 
   return (

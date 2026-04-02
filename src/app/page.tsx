@@ -137,24 +137,8 @@ export default async function HomePage() {
           }}
             className="cat-grid"
           >
-            {ALL_HOME_CATEGORIES.map((cat) => {
-              const count = catCountMap[cat.slug] ?? 0;
-              const isLive = count > 0;
-
-              if (!isLive) {
-                return (
-                  <div
-                    key={cat.slug}
-                    className="category-tile category-tile-coming"
-                    aria-label={`${cat.name} — coming soon`}
-                  >
-                    <CategoryIcon slug={cat.slug} size={28} color="#aaa" />
-                    <span className="category-tile-name" style={{ color: '#aaa' }}>{cat.name}</span>
-                    <span className="pixel-tag pixel-tag-gray" style={{ fontSize: '8px', padding: '2px 6px' }}>SOON</span>
-                  </div>
-                );
-              }
-
+            {ALL_HOME_CATEGORIES.filter(cat => (catCountMap[cat.slug] ?? 0) > 0).map((cat) => {
+              const count = catCountMap[cat.slug];
               return (
                 <Link
                   key={cat.slug}
