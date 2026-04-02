@@ -262,7 +262,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 color: '#888',
                 marginTop: '6px',
               }}>
-                Final price confirmed on WhatsApp
+                Due to frequent market fluctuations, Final price confirmed on WhatsApp
               </div>
             </div>
 
