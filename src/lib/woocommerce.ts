@@ -274,7 +274,7 @@ class WooCommerceClient {
         page: 1,
       }, 3600);
 
-      let all = [...(p1 || [])];
+      const all = [...(p1 || [])];
 
       if (totalPages > 1) {
         const fetchLimit = Math.min(totalPages, 10); // Fetch up to 1000 products

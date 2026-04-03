@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { woo } from '@/lib/woocommerce';
 import CategoryIcon from '@/components/CategoryIcon';
 import AnimatedText from '@/components/AnimatedText';
-import ProductCard from '@/components/ProductCard';
 import HomeProductSection from '@/components/HomeProductSection';
 import { ALL_HOME_CATEGORIES } from '@/lib/constants';
 
