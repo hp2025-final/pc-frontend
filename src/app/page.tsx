@@ -1,18 +1,41 @@
 import Link from 'next/link';
 import { woo } from '@/lib/woocommerce';
-import { formatPrice, getEffectivePrice, getBrandName, getWarrantyPeriod } from '@/lib/utils';
 import CategoryIcon from '@/components/CategoryIcon';
 import AnimatedText from '@/components/AnimatedText';
+import ProductCard from '@/components/ProductCard';
+import HomeProductSection from '@/components/HomeProductSection';
 import { ALL_HOME_CATEGORIES } from '@/lib/constants';
 
 // ISR: revalidate every 2 hours
 export const revalidate = 7200;
 
 export default async function HomePage() {
-  const [wooCategories, latestProducts, usedLaptops] = await Promise.all([
+  const [
+    wooCategories,
+    usedLaptops,
+    pcCases,
+    gpus,
+    motherboards,
+    cpus,
+    cooling,
+    psu,
+    storage,
+    ram,
+    keyboards,
+    mice
+  ] = await Promise.all([
     woo.getCategories({ per_page: 100 }),
-    woo.getProductsByCategory('latest-arrival', { per_page: 12, orderby: 'date', order: 'desc' }),
     woo.getProductsByCategory('laptops', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('pc-cases', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('gpus', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('motherboards', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('cpus', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('pc-cooling-systems', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('power-supplies', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('storage', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('ram', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('gaming-keyboards', { per_page: 10, orderby: 'date', order: 'desc' }),
+    woo.getProductsByCategory('gaming-mouse', { per_page: 10, orderby: 'date', order: 'desc' }),
   ]);
 
   // Map WooCommerce category counts by slug
@@ -20,6 +43,7 @@ export default async function HomePage() {
   for (const c of wooCategories) {
     catCountMap[c.slug] = c.count;
   }
+
 
   // ─── Organization JSON-LD ──────────────────────────────────
   const organizationJsonLd = {
@@ -118,10 +142,7 @@ export default async function HomePage() {
           </p>
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="#latest-arrivals" className="pixel-btn">
-              ▶ Latest Arrivals
-            </Link>
-            <Link href="#shop-by-category" className="pixel-btn pixel-btn-outline">
+            <Link href="#shop-by-category" className="pixel-btn">
               ▦ Shop by Category
             </Link>
           </div>
@@ -163,120 +184,9 @@ export default async function HomePage() {
           `}</style>
         </section>
 
-        {/* ──────────── LATEST PRODUCTS ──────────── */}
-        <section id="latest-arrivals" style={{ marginBottom: '64px', scrollMarginTop: '80px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
-            <h2 className="section-title" style={{ marginBottom: 0, borderBottom: 'none' }}>{"// Latest Arrivals"}</h2>
-            <Link
-              href="/search"
-              style={{
-                fontFamily: 'var(--font-pixel), monospace',
-                fontSize: '9px',
-                color: '#000',
-                textDecoration: 'underline',
-                textUnderlineOffset: '4px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-              }}
-            >
-              VIEW ALL →
-            </Link>
-          </div>
-
-          {latestProducts.length > 0 ? (
-            <div style={{
-              display: 'grid',
-              gap: '8px',
-            }} className="products-grid">
-              {latestProducts.map((product) => {
-                const effectivePrice = getEffectivePrice(product);
-                const price = formatPrice(effectivePrice);
-                const inStock = product.stock_status === 'instock';
-                const brand = getBrandName(product);
-                const warranty = getWarrantyPeriod(product);
-
-                return (
-                  <Link
-                    key={product.id}
-                    href={`/product/${product.slug}`}
-                    className="product-card"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    {/* Image */}
-                    <div className="product-card-image">
-                      <span className={`pixel-tag ${inStock ? '' : 'pixel-tag-gray'}`} style={{
-                        position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        zIndex: 10,
-                        fontSize: '9px',
-                        padding: '4px 6px',
-                        boxShadow: 'none'
-                      }}>
-                        {inStock ? 'IN STOCK' : 'OUT OF STOCK'}
-                      </span>
-                      {product.images.length > 0 ? (
-                        <img
-                          src={product.images[0].src}
-                          alt={product.images[0].alt || product.name}
-                          loading="lazy"
-                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '16px' }}
-                        />
-                      ) : (
-                        <div style={{
-                          width: '100%', height: '100%',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          background: '#f0f0f0',
-                        }}>
-                          <CategoryIcon slug={product.categories[0]?.slug || ''} size={40} color="#ccc" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="product-card-body">
-                      <h3 className="product-card-title">{product.name}</h3>
-
-                      {(brand || warranty) && (
-                        <span style={{
-                          fontFamily: 'var(--font-mono), monospace',
-                          fontSize: '10px',
-                          color: '#888',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em',
-                        }}>
-                          {[brand, warranty].filter(Boolean).join(' | ')}
-                        </span>
-                      )}
-
-                      <div className="price-range price-range-sm">{price}</div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div style={{
-              border: '2px solid #000',
-              padding: '48px 24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ fontFamily: 'var(--font-pixel), monospace', fontSize: '11px', color: '#888' }}>
-                No products yet. Check back soon.
-              </p>
-            </div>
-          )}
-
-          <style>{`
-            .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            @media (min-width: 600px)  { .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-            @media (min-width: 768px)  { .products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-            @media (min-width: 1024px) { .products-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-          `}</style>
-        </section>
 
         {/* ──────────── WHY US ──────────── */}
-        <section>
+        <section style={{ marginBottom: '64px' }}>
           <h2 className="section-title">{"// Why Choose Us"}</h2>
           <div style={{
             display: 'grid',
@@ -315,116 +225,103 @@ export default async function HomePage() {
         </section>
 
         {/* ──────────── USED LAPTOPS ──────────── */}
-        <section id="used-laptops" style={{ marginTop: '64px', marginBottom: '64px', scrollMarginTop: '80px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
-            <h2 className="section-title" style={{ marginBottom: 0, borderBottom: 'none' }}>{"// Used Laptops"}</h2>
-            <Link
-              href="/category/laptops"
-              style={{
-                fontFamily: 'var(--font-pixel), monospace',
-                fontSize: '9px',
-                color: '#000',
-                textDecoration: 'underline',
-                textUnderlineOffset: '4px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-              }}
-            >
-              VIEW ALL →
-            </Link>
-          </div>
+        <HomeProductSection
+          id="used-laptops"
+          title="Used Laptops"
+          products={usedLaptops}
+          viewAllLink="/category/laptops"
+          columns={5}
+        />
 
-          {usedLaptops.length > 0 ? (
-            <div style={{
-              display: 'grid',
-              gap: '8px',
-            }} className="products-grid laptops-grid">
-              {usedLaptops.map((product) => {
-                const effectivePrice = getEffectivePrice(product);
-                const price = formatPrice(effectivePrice);
-                const inStock = product.stock_status === 'instock';
-                const brand = getBrandName(product);
-                const warranty = getWarrantyPeriod(product);
+        {/* ──────────── PC CASES ──────────── */}
+        <HomeProductSection
+          id="pc-cases"
+          title="PC Cases"
+          products={pcCases}
+          viewAllLink="/category/pc-cases"
+          columns={5}
+        />
 
-                return (
-                  <Link
-                    key={product.id}
-                    href={`/product/${product.slug}`}
-                    className="product-card"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    {/* Image */}
-                    <div className="product-card-image">
-                      <span className={`pixel-tag ${inStock ? '' : 'pixel-tag-gray'}`} style={{
-                        position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        zIndex: 10,
-                        fontSize: '9px',
-                        padding: '4px 6px',
-                        boxShadow: 'none'
-                      }}>
-                        {inStock ? 'IN STOCK' : 'OUT OF STOCK'}
-                      </span>
-                      {product.images.length > 0 ? (
-                        <img
-                          src={product.images[0].src}
-                          alt={product.images[0].alt || product.name}
-                          loading="lazy"
-                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '16px' }}
-                        />
-                      ) : (
-                        <div style={{
-                          width: '100%', height: '100%',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          background: '#f0f0f0',
-                        }}>
-                          <CategoryIcon slug={product.categories[0]?.slug || ''} size={40} color="#ccc" />
-                        </div>
-                      )}
-                    </div>
+        {/* ──────────── GRAPHICS CARDS ──────────── */}
+        <HomeProductSection
+          id="graphics-cards"
+          title="Graphics Cards"
+          products={gpus}
+          viewAllLink="/category/gpus"
+          columns={5}
+        />
 
-                    {/* Info */}
-                    <div className="product-card-body">
-                      <h3 className="product-card-title">{product.name}</h3>
+        {/* ──────────── MOTHERBOARDS ──────────── */}
+        <HomeProductSection
+          id="motherboards"
+          title="Motherboards"
+          products={motherboards}
+          viewAllLink="/category/motherboards"
+          columns={5}
+        />
 
-                      {(brand || warranty) && (
-                        <span style={{
-                          fontFamily: 'var(--font-mono), monospace',
-                          fontSize: '10px',
-                          color: '#888',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em',
-                        }}>
-                          {[brand, warranty].filter(Boolean).join(' | ')}
-                        </span>
-                      )}
+        {/* ──────────── PROCESSORS ──────────── */}
+        <HomeProductSection
+          id="processors"
+          title="Processors"
+          products={cpus}
+          viewAllLink="/category/cpus"
+          columns={5}
+        />
 
-                      <div className="price-range price-range-sm">{price}</div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div style={{
-              border: '2px solid #000',
-              padding: '48px 24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ fontFamily: 'var(--font-pixel), monospace', fontSize: '11px', color: '#888' }}>
-                No laptops yet. Check back soon.
-              </p>
-            </div>
-          )}
+        {/* ──────────── PC COOLING ──────────── */}
+        <HomeProductSection
+          id="pc-cooling"
+          title="PC Cooling"
+          products={cooling}
+          viewAllLink="/category/pc-cooling-systems"
+          columns={5}
+        />
 
-          <style>{`
-            .laptops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            @media (min-width: 600px)  { .laptops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-            @media (min-width: 768px)  { .laptops-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-            @media (min-width: 1024px) { .laptops-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-          `}</style>
-        </section>
+        {/* ──────────── PSU ──────────── */}
+        <HomeProductSection
+          id="psu"
+          title="Power Supplies"
+          products={psu}
+          viewAllLink="/category/power-supplies"
+          columns={5}
+        />
+
+        {/* ──────────── STORAGE ──────────── */}
+        <HomeProductSection
+          id="storage"
+          title="Storage"
+          products={storage}
+          viewAllLink="/category/storage"
+          columns={5}
+        />
+
+        {/* ──────────── RAM ──────────── */}
+        <HomeProductSection
+          id="ram"
+          title="PC RAM"
+          products={ram}
+          viewAllLink="/category/ram"
+          columns={5}
+        />
+
+        {/* ──────────── GAMING KEYBOARDS ──────────── */}
+        <HomeProductSection
+          id="keyboards"
+          title="Gaming Keyboards"
+          products={keyboards}
+          viewAllLink="/category/gaming-keyboards"
+          columns={5}
+        />
+
+        {/* ──────────── GAMING MICE ──────────── */}
+        <HomeProductSection
+          id="mice"
+          title="Gaming Mice"
+          products={mice}
+          viewAllLink="/category/gaming-mouse"
+          columns={5}
+        />
 
       </div>
     </div>

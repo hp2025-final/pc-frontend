@@ -263,6 +263,42 @@ class WooCommerceClient {
   }
 
   /**
+   * Get all products for the data feed (full data: includes descriptions, attributes, etc.)
+   * Fetches up to 500 products for performance safety.
+   */
+  async getAllProductsForFeed(): Promise<WooProduct[]> {
+    try {
+      const { data: p1, totalPages } = await this.requestWithMeta<WooProduct[]>('products', {
+        status: 'publish',
+        per_page: 100,
+        page: 1,
+      }, 3600);
+
+      let all = [...(p1 || [])];
+
+      if (totalPages > 1) {
+        const fetchLimit = Math.min(totalPages, 10); // Fetch up to 1000 products
+        for (let i = 2; i <= fetchLimit; i++) {
+          const pageProducts = await this.request<WooProduct[]>('products', {
+            status: 'publish',
+            per_page: 100,
+            page: i,
+          }, 3600);
+          if (Array.isArray(pageProducts)) {
+            all.push(...pageProducts);
+          }
+        }
+      }
+
+
+      return all;
+    } catch (error) {
+      console.error('Error fetching all products for feed:', error);
+      return [];
+    }
+  }
+
+  /**
    * Get single category by slug (cached for 1 hour)
    */
   async getCategoryBySlug(slug: string): Promise<WooCategory | null> {
@@ -314,4 +350,5 @@ export const woo = {
   getCategoryBySlug: (slug: string) => getWooClient().getCategoryBySlug(slug),
   getProductsByCategory: (categorySlug: string, params?: WooSearchParams, categoryId?: number) =>
     getWooClient().getProductsByCategory(categorySlug, params, categoryId),
+  getAllProductsForFeed: () => getWooClient().getAllProductsForFeed(),
 };
